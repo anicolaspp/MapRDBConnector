@@ -16,12 +16,12 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
   private var supportedFilters: List[Filter] = List.empty
 
-  private val requiredSchema: StructType = schema
+//  private val requiredSchema: StructType = schema
 
   private var projections: Option[StructType] = None
 
   override def readSchema(): StructType = projections match {
-    case None => requiredSchema
+    case None => schema
     case Some(fieldsToProject) => fieldsToProject
   }
 

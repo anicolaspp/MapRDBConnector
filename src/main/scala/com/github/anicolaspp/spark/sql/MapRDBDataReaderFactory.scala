@@ -70,8 +70,8 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
       val values = schema
         .fields
-        .map(_.name).
-        foldLeft(List.empty[String])((xs, name) => document.getString(name) :: xs)
+        .map(_.name)
+        .foldLeft(List.empty[String])((xs, name) => document.getString(name) :: xs)
         .reverse
 
       Row.fromSeq(values)

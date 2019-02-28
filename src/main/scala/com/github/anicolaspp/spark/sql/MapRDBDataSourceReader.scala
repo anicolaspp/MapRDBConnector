@@ -3,8 +3,8 @@ package com.github.anicolaspp.spark.sql
 import java.util
 
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.sources._
+import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
 
 class MapRDBDataSourceReader(schema: StructType, tablePath: String)
@@ -15,8 +15,6 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
   import collection.JavaConversions._
 
   private var supportedFilters: List[Filter] = List.empty
-
-  //  private val requiredSchema: StructType = schema
 
   private var projections: Option[StructType] = None
 
@@ -41,6 +39,8 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
       case _ => false
     }
+
+    // maybe the query can be built here only once ???
 
     supportedFilters = supported.toList
 

@@ -21,6 +21,8 @@ object App {
     sparkSession.conf.set("spark.sql.streaming.checkpointLocation", "/Users/nperez/check")
     sparkSession.conf.set("spark.sql.streaming.schemaInference", value = true)
 
+    sparkSession.sparkContext.setLogLevel("INFO")
+
     println("HERE")
 
     val schema = StructType(Seq(StructField("_id", StringType), StructField("first_name", StringType), StructField("uid", StringType)))

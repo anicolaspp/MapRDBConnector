@@ -2,7 +2,7 @@ package com.github.anicolaspp.spark.sql
 
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources.v2.reader.{DataReader, DataReaderFactory}
-import org.apache.spark.sql.sources.{EqualTo, Filter, GreaterThan}
+import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.StructType
 
 class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: StructType)
@@ -25,24 +25,68 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
     queryResult.asScala.iterator
   }
 
+
+  private def conditionFromSimple(filter: Filter) = {
+
+    println("EVAL: " + filter.toString)
+
+    val simpleCondition = filter match {
+      case IsNotNull(field) => connection.newCondition().exists(field)
+      case EqualTo(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.EQUAL, value)
+      case EqualTo(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
+
+      case GreaterThan(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
+      case GreaterThan(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
+    }
+
+    println("EVAL: " + filter.toString + "===============" + simpleCondition.toString)
+
+    simpleCondition.build()
+  }
+
+
+  private def evalFilter(filter: Filter): QueryCondition = {
+
+    println("EVAL: " + filter.toString)
+
+    val condition = filter match {
+
+      case Or(left, right) => connection.newCondition()
+        .or()
+        .condition(evalFilter(left))
+        .condition(evalFilter(right))
+        .close()
+        .build()
+
+      case And(left, right) => connection.newCondition()
+          .and()
+          .condition(evalFilter(left))
+          .condition(evalFilter(right))
+          .close()
+          .and()
+
+      case singleFilter => conditionFromSimple(singleFilter)
+    }
+
+    condition
+
+  }
+
   private def createFilterCondition(filters: List[Filter]): QueryCondition = {
 
-    println("FILTERS: " + filters)
+    println("SUPPORTED FILTERS: " + filters)
 
-    filters.foldLeft(connection.newCondition().and()) { (condition, filter) =>
+    val finalCondition = filters.foldLeft(connection.newCondition().and()) { (condition, filter) =>
 
-      filter match {
-        case EqualTo(field, value: String) => condition.is(field, QueryCondition.Op.EQUAL, value)
-        case EqualTo(field, value: Int) => condition.is(field, QueryCondition.Op.EQUAL, value)
-
-        case GreaterThan(field, value: String) => condition.is(field, QueryCondition.Op.GREATER, value)
-        case GreaterThan(field, value: Int) => condition.is(field, QueryCondition.Op.GREATER, value)
-
-      }
+      condition.condition(evalFilter(filter))
 
     }
       .close()
       .build()
+
+    println("FINAL CONDITION: " + finalCondition.toString)
+
+    finalCondition
   }
 
   private def query: Query = {

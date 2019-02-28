@@ -4,7 +4,7 @@ import java.util
 
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
-import org.apache.spark.sql.sources.{EqualTo, Filter, GreaterThan}
+import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.StructType
 
 class MapRDBDataSourceReader(schema: StructType, tablePath: String)
@@ -16,7 +16,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
   private var supportedFilters: List[Filter] = List.empty
 
-//  private val requiredSchema: StructType = schema
+  //  private val requiredSchema: StructType = schema
 
   private var projections: Option[StructType] = None
 
@@ -29,9 +29,15 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
     List(new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema()))
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
+
+    println("pushFilters: " + filters.foldLeft("")((s, f) => s + f.toString))
+
     val (supported, unsupported) = filters.partition {
+      case And(_,_) => true
+      case Or(_, _) => true
       case EqualTo(_, _) => true
       case GreaterThan(_, _) => true
+      case IsNotNull(_) => true
 
       case _ => false
     }

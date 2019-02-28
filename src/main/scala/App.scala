@@ -23,12 +23,33 @@ object App {
 
     println("HERE")
 
-    val data = sparkSession
-      .loadFromMapRDB("/user/mapr/tables/data", StructType(Seq(StructField("_id", StringType), StructField("uid", StringType))))
+    val schema = StructType(Seq(StructField("_id", StringType), StructField("first_name", StringType), StructField("uid", StringType)))
+
+    sparkSession
+      .loadFromMapRDB("/user/mapr/tables/data", schema)
       .filter("uid = '101'")
       .select("_id")
+      .show()
 
 
-    data.take(3).foreach(println)
+    sparkSession
+      .loadFromMapRDB("/user/mapr/tables/data", schema)
+      .filter("uid = '101' and first_name = 'tom'")
+      .select("_id")
+      .show()
+
+    sparkSession
+      .loadFromMapRDB("/user/mapr/tables/data", schema)
+      .filter("uid = '101'")
+      .filter("first_name = 'tom'")
+      .select("_id")
+      .show()
+
+    sparkSession
+      .loadFromMapRDB("/user/mapr/tables/data", schema)
+      .filter("(uid = '101' or first_name = 'john') and _id = '1'")
+      .select("_id")
+      .show()
+
   }
 }

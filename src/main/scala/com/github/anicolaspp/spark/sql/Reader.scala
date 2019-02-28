@@ -14,9 +14,3 @@ class Reader extends ReadSupportWithSchema {
     new MapRDBDataSourceReader(schema, tablePath)
   }
 }
-
-
-
-
-
-

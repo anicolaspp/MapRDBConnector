@@ -12,6 +12,8 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
     with SupportsPushDownFilters
     with SupportsPushDownRequiredColumns {
 
+  import collection.JavaConversions._
+
   private var supportedFilters: List[Filter] = List.empty
 
   private val requiredSchema: StructType = schema
@@ -20,18 +22,11 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
   override def readSchema(): StructType = projections match {
     case None => requiredSchema
-    case Some(p) => p
+    case Some(fieldsToProject) => fieldsToProject
   }
 
-  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] = {
-    val li = new util.ArrayList[DataReaderFactory[Row]]
-
-    println("MapRDBDataSourceReader.createDataReaderFactories: READ SCHEMA:" + readSchema())
-
-    li.add(new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema()))
-
-    li
-  }
+  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] =
+    List(new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema()))
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
     val (supported, unsupported) = filters.partition {
@@ -48,9 +43,5 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
   override def pushedFilters(): Array[Filter] = supportedFilters.toArray
 
-  override def pruneColumns(requiredSchema: StructType): Unit = {
-    println("MapRDBDataSourceReader.pruneColumns: pruneColumns SCHEMA:" + requiredSchema)
-
-    this.projections = Some(requiredSchema)
-  }
+  override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 }

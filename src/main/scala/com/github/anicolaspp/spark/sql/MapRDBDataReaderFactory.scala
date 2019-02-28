@@ -45,18 +45,13 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
       .build()
   }
 
-  private def query = {
+  private def query: Query = {
 
     val condition = createFilterCondition(filters)
-
-    println("CONDITION: " + condition.toString)
-
-    println("SCHEMA: " + schema)
 
     val query = connection
       .newQuery()
       .select(schema.fields.map(_.name): _*)
-      .setOption("ojai.mapr.query.hint-using-index", "uid_idx")
       .where(condition)
       .build()
 
@@ -64,6 +59,7 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
   }
 
   override def createDataReader(): DataReader[Row] = new DataReader[Row] {
+
     override def next(): Boolean = documents.hasNext
 
     override def get(): Row = {
@@ -72,7 +68,11 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
       println(document)
 
-      val values = schema.fields.map(_.name).foldLeft(List.empty[String])((xs, name) => document.getString(name) :: xs).reverse
+      val values = schema
+        .fields
+        .map(_.name).
+        foldLeft(List.empty[String])((xs, name) => document.getString(name) :: xs)
+        .reverse
 
       Row.fromSeq(values)
     }

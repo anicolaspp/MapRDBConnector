@@ -5,7 +5,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object MapRDB {
 
-
   implicit class ExtendedSession(sparkSession: SparkSession) {
 
     def loadFromMapRDB(path: String, schema: StructType): DataFrame = {

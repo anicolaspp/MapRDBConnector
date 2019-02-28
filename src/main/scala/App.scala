@@ -6,12 +6,12 @@ import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 // ONLY for testing
 object App {
+
   import com.github.anicolaspp.spark.sql.MapRDB._
 
   def main(args: Array[String]): Unit = {
 
     val config = new org.apache.spark.SparkConf().setAppName("testing streaming")
-    //    config.setJars(Seq("/opt/mapr/lib/*"))
 
     val sparkSession = SparkSession
       .builder()

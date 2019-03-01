@@ -21,7 +21,7 @@ object App {
     sparkSession.conf.set("spark.sql.streaming.checkpointLocation", "/Users/nperez/check")
     sparkSession.conf.set("spark.sql.streaming.schemaInference", value = true)
 
-    sparkSession.sparkContext.setLogLevel("INFO")
+    sparkSession.sparkContext.setLogLevel("TRACE")
 
     println("HERE")
 

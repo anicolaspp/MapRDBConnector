@@ -6,7 +6,8 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReader, DataReaderFactory}
 import org.apache.spark.sql.types.{DataType, StructType}
 
-class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: StructType)
+class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: StructType,
+  locations: Array[String], queryJson: String)
   extends DataReaderFactory[Row] with Logging {
 
   import org.ojai.store._
@@ -30,11 +31,18 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
     val queryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
+    val builtQueryString = if( queryJson == "{}" ) {
+      queryCondition.asJsonString
+    } else {
+      "{\"$and\":[" + queryJson + "," + queryCondition.asJsonString + "]}"
+    }
+    log.trace(s"Using query string: $builtQueryString")
+
     log.trace(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
     val query = connection
       .newQuery()
-      .where(queryCondition)
+      .where(builtQueryString)
       .select(projectionsNames: _*)
       .build()
 
@@ -48,6 +56,8 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
       .mkString("[", ",", "]")
 
   def projectionsNames: Array[String] = schema.fields.map(_.name)
+
+  override def preferredLocations(): Array[String] = locations
 
   override def createDataReader(): DataReader[Row] = new DataReader[Row] {
 

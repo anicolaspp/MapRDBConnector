@@ -61,7 +61,10 @@ object QueryConditionBuilder extends Logging {
       case In(field, values)              => connection.newCondition().in(field, values.toList)
       case StringStartsWith(field, value) => connection.newCondition().like(field, value)
       case eq@EqualTo(_, _)               => evalEqualTo(eq)
+      case lt@LessThan(_,_)               => evalLessThan(lt)
+      case le@LessThanOrEqual(_,_)        => evalLessThanEqual(le)
       case gt@GreaterThan(_, _)           => evalGreaterThan(gt)
+      case ge@GreaterThanOrEqual(_, _)    => evalGreaterThanEqual(ge)
     }
 
     log.info("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)
@@ -114,14 +117,14 @@ object QueryConditionBuilder extends Logging {
     case GreaterThan(_, _) => connection.newCondition()
   }
 
-  private def evalGreaterThanEqual(filter: GreaterThan)(implicit connection: Connection) = filter match {
-    case GreaterThan(field, value: Double) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThan(field, value: Float) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThan(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThan(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThan(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThan(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+  private def evalGreaterThanEqual(filter: GreaterThanOrEqual)(implicit connection: Connection) = filter match {
+    case GreaterThanOrEqual(field, value: Double) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Float) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
 
-    case GreaterThan(_, _) => connection.newCondition()
+    case GreaterThanOrEqual(_, _) => connection.newCondition()
   }
 }

@@ -19,7 +19,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
   private var projections: Option[StructType] = None
 
   override def readSchema(): StructType = projections match {
-    case None => schema
+    case None                  => schema
     case Some(fieldsToProject) => fieldsToProject
   }
 
@@ -33,9 +33,15 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
     val (supported, unsupported) = filters.partition {
       case _: And => true
       case _: Or => true
-      case _: EqualTo => true
-      case _: GreaterThan => true
+      case _: IsNull => true
       case _: IsNotNull => true
+      case _: In  => true
+      case _: StringStartsWith => true
+      case _: EqualTo => true
+      case _: LessThan => true
+      case _: LessThanOrEqual => true
+      case _: GreaterThan => true
+      case _: GreaterThanOrEqual => true
 
       case _ => false
     }

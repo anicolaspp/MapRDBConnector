@@ -30,10 +30,12 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
     val queryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
+    println(s"PROJECTIONS: $schema")
+
     val query = connection
       .newQuery()
-      .select(schema.fields.map(_.name): _*)
       .where(queryCondition)
+      .select(schema.fields.map(_.name): _*)
       .build()
 
     query

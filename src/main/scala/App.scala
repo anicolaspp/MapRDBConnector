@@ -1,7 +1,7 @@
 package com.github.anicolaspp
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 
 
 // ONLY for testing
@@ -30,27 +30,28 @@ object App {
     sparkSession
       .loadFromMapRDB("/user/mapr/tables/data", schema)
       .filter("uid = '101'")
-      .select("_id")
+      .select("_id", "first_name")
       .show()
-
-
+    
     sparkSession
       .loadFromMapRDB("/user/mapr/tables/data", schema)
       .filter("uid = '101' and first_name = 'tom'")
-      .select("_id")
       .show()
 
     sparkSession
       .loadFromMapRDB("/user/mapr/tables/data", schema)
       .filter("uid = '101'")
       .filter("first_name = 'tom'")
-      .select("_id")
       .show()
 
     sparkSession
       .loadFromMapRDB("/user/mapr/tables/data", schema)
-      .filter("(uid = '101' or first_name = 'john') and _id = '1'")
-      .select("_id")
+      .filter("(uid <= '101' or first_name = 'john') and _id = '1'")
+      .show()
+
+    sparkSession
+      .loadFromMapRDB("/user/mapr/tables/data", schema)
+      .filter("uid >= '101' or _id = '1'")
       .show()
 
   }

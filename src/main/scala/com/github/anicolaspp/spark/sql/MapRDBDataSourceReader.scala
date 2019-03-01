@@ -27,9 +27,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
     List(new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema()))
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
-
-    println("pushFilters: " + filters.foldLeft("")((s, f) => s + f.toString))
-
+    
     val (supported, unsupported) = filters.partition {
       case _: And => true
       case _: Or => true

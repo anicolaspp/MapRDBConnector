@@ -10,8 +10,16 @@ object QueryConditionBuilder extends Logging {
 
   def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): QueryCondition = createFilterCondition(filters)
 
+  /**
+    * Spark sends individual filters down that we need to concat using AND. This function evaluates each filter
+    * recursively and creates the corresponding OJAI query.
+    *
+    * @param filters
+    * @param connection
+    * @return
+    */
   private def createFilterCondition(filters: List[Filter])(implicit connection: Connection): QueryCondition = {
-    log.info("SUPPORTED FILTERS: " + filters)
+    log.trace(s"FILTERS TO PUSH DOWN: $filters")
 
     val andCondition = connection.newCondition().and()
 
@@ -20,14 +28,23 @@ object QueryConditionBuilder extends Logging {
       .close()
       .build()
 
-    log.info("FINAL CONDITION: " + finalCondition.toString)
+    log.trace(s"FINAL OJAI QUERY CONDITION: ${finalCondition.toString}")
 
     finalCondition
   }
 
+  /**
+    * Translate a Spark Filter to an OJAI query.
+    *
+    * It recursively translate nested filters.
+    *
+    * @param filter
+    * @param connection
+    * @return
+    */
   private def evalFilter(filter: Filter)(implicit connection: Connection): QueryCondition = {
 
-    log.info("evalFilter: " + filter.toString)
+    log.trace("evalFilter: " + filter.toString)
 
     val condition = filter match {
 
@@ -53,8 +70,6 @@ object QueryConditionBuilder extends Logging {
 
   private def evalSingleFilter(filter: Filter)(implicit connection: Connection) = {
 
-    log.info("evalSingleFilter: " + filter.toString)
-
     val simpleCondition = filter match {
       case IsNull(field)                  => connection.newCondition().notExists(field)
       case IsNotNull(field)               => connection.newCondition().exists(field)
@@ -67,7 +82,7 @@ object QueryConditionBuilder extends Logging {
       case ge@GreaterThanOrEqual(_, _)    => evalGreaterThanEqual(ge)
     }
 
-    log.info("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)
+    log.trace("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)
 
     simpleCondition.build()
   }

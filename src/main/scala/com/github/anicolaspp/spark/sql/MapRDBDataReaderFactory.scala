@@ -1,12 +1,13 @@
 package com.github.anicolaspp.spark.sql
 
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReader, DataReaderFactory}
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{DataType, StructType}
 
 class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: StructType)
-  extends DataReaderFactory[Row] {
+  extends DataReaderFactory[Row] with Logging {
 
   import org.ojai.store._
 
@@ -20,26 +21,33 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
     val queryResult = store.find(query)
 
-    println(s"QUERY PLAN: ${queryResult.getQueryPlan}")
+    log.trace(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
 
     queryResult.asScala.iterator
   }
-
-
+  
   private def query: Query = {
 
     val queryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
-    println(s"PROJECTIONS: $schema")
+    log.trace(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
     val query = connection
       .newQuery()
       .where(queryCondition)
-      .select(schema.fields.map(_.name): _*)
+      .select(projectionsNames: _*)
       .build()
 
     query
   }
+
+  def projectionsAsString: String =
+    schema
+      .fields
+      .foldLeft(List.empty[(String, DataType)])((xs, field) => (field.name, field.dataType) :: xs)
+      .mkString("[", ",", "]")
+
+  def projectionsNames: Array[String] = schema.fields.map(_.name)
 
   override def createDataReader(): DataReader[Row] = new DataReader[Row] {
 
@@ -49,11 +57,9 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
       val document = documents.next()
 
-      println(document)
+      log.trace(document.asJsonString())
 
-      val values = schema
-        .fields
-        .map(_.name)
+      val values = projectionsNames
         .foldLeft(List.empty[String])((xs, name) => document.getString(name) :: xs)
         .reverse
 

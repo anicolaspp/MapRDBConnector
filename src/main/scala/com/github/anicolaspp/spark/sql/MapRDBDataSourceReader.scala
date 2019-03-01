@@ -2,6 +2,8 @@ package com.github.anicolaspp.spark.sql
 
 import java.util
 
+import org.apache.spark.internal.Logging
+
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
@@ -9,7 +11,8 @@ import org.apache.spark.sql.types.StructType
 import com.mapr.db.spark.MapRDBSpark
 
 class MapRDBDataSourceReader(schema: StructType, tablePath: String)
-  extends DataSourceReader
+    extends DataSourceReader
+    with Logging
     with SupportsPushDownFilters
     with SupportsPushDownRequiredColumns {
 
@@ -26,7 +29,10 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
   override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] = {
     com.mapr.db.MapRDB.getTable(tablePath).getTabletInfos
-      .map(descriptor => new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema(), descriptor)).toList
+      .map(descriptor => {
+        log.trace("Adding descriptor with locations("+descriptor.getLocations.mkString(",")+") and query " + descriptor.getCondition.asJsonString)
+        new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema(), descriptor.getLocations,descriptor.getCondition.asJsonString)
+      }).toList
   }
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {

@@ -8,7 +8,7 @@ object QueryConditionBuilder extends Logging {
 
   import collection.JavaConversions._
 
-  def buildQueryConditionFrom(filters: List[Filter], tabletCondition: QueryCondition)(implicit connection: Connection): QueryCondition = createFilterCondition(filters,tabletCondition)
+  def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): QueryCondition = createFilterCondition(filters)
 
   /**
     * Spark sends individual filters down that we need to concat using AND. This function evaluates each filter
@@ -18,10 +18,10 @@ object QueryConditionBuilder extends Logging {
     * @param connection
     * @return
     */
-  private def createFilterCondition(filters: List[Filter],tabletCondition: QueryCondition)(implicit connection: Connection): QueryCondition = {
+  private def createFilterCondition(filters: List[Filter])(implicit connection: Connection): QueryCondition = {
     log.trace(s"FILTERS TO PUSH DOWN: $filters")
 
-    val andCondition = connection.newCondition().and().condition(tabletCondition)
+    val andCondition = connection.newCondition().and()
 
     val finalCondition = filters
       .foldLeft(andCondition) { (partialCondition, filter) => partialCondition.condition(evalFilter(filter)) }

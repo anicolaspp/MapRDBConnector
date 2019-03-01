@@ -6,6 +6,7 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
+import com.mapr.db.spark.MapRDBSpark
 
 class MapRDBDataSourceReader(schema: StructType, tablePath: String)
   extends DataSourceReader
@@ -23,8 +24,10 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
     case Some(fieldsToProject) => fieldsToProject
   }
 
-  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] =
-    List(new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema()))
+  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] = {
+    com.mapr.db.MapRDB.getTable(tablePath).getTabletInfos
+      .map(descriptor => new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema(), descriptor)).toList
+  }
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
     

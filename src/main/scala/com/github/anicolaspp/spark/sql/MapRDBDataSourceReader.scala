@@ -31,16 +31,14 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
     println("pushFilters: " + filters.foldLeft("")((s, f) => s + f.toString))
 
     val (supported, unsupported) = filters.partition {
-      case And(_,_) => true
-      case Or(_, _) => true
-      case EqualTo(_, _) => true
-      case GreaterThan(_, _) => true
-      case IsNotNull(_) => true
+      case _: And => true
+      case _: Or => true
+      case _: EqualTo => true
+      case _: GreaterThan => true
+      case _: IsNotNull => true
 
       case _ => false
     }
-
-    // maybe the query can be built here only once ???
 
     supportedFilters = supported.toList
 

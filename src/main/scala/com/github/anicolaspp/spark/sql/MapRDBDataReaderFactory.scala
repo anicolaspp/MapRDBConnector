@@ -28,7 +28,7 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
   private def query: Query = {
 
-    val queryCondition = QueryConditionBuilder.condition(filters)(connection)
+    val queryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
     val query = connection
       .newQuery()

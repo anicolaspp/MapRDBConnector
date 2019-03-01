@@ -10,6 +10,13 @@ object QueryConditionBuilder extends Logging {
 
   def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): QueryCondition = createFilterCondition(filters)
 
+  def addTabletInfo(queryJson: String, queryCondition: QueryCondition) =
+    if (queryJson == "{}") {
+      queryCondition.asJsonString
+    } else {
+      "{\"$and\":[" + queryJson + "," + queryCondition.asJsonString + "]}"
+    }
+
   /**
     * Spark sends individual filters down that we need to concat using AND. This function evaluates each filter
     * recursively and creates the corresponding OJAI query.
@@ -71,15 +78,15 @@ object QueryConditionBuilder extends Logging {
   private def evalSingleFilter(filter: Filter)(implicit connection: Connection) = {
 
     val simpleCondition = filter match {
-      case IsNull(field)                  => connection.newCondition().notExists(field)
-      case IsNotNull(field)               => connection.newCondition().exists(field)
-      case In(field, values)              => connection.newCondition().in(field, values.toList)
+      case IsNull(field) => connection.newCondition().notExists(field)
+      case IsNotNull(field) => connection.newCondition().exists(field)
+      case In(field, values) => connection.newCondition().in(field, values.toList)
       case StringStartsWith(field, value) => connection.newCondition().like(field, value)
-      case eq@EqualTo(_, _)               => evalEqualTo(eq)
-      case lt@LessThan(_,_)               => evalLessThan(lt)
-      case le@LessThanOrEqual(_,_)        => evalLessThanEqual(le)
-      case gt@GreaterThan(_, _)           => evalGreaterThan(gt)
-      case ge@GreaterThanOrEqual(_, _)    => evalGreaterThanEqual(ge)
+      case eq@EqualTo(_, _) => evalEqualTo(eq)
+      case lt@LessThan(_, _) => evalLessThan(lt)
+      case le@LessThanOrEqual(_, _) => evalLessThanEqual(le)
+      case gt@GreaterThan(_, _) => evalGreaterThan(gt)
+      case ge@GreaterThanOrEqual(_, _) => evalGreaterThanEqual(ge)
     }
 
     log.trace("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)

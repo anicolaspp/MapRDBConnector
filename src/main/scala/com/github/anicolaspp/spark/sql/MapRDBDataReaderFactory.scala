@@ -6,9 +6,11 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReader, DataReaderFactory}
 import org.apache.spark.sql.types.{DataType, StructType}
 
-class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: StructType,
-  locations: Array[String], queryJson: String)
-  extends DataReaderFactory[Row] with Logging {
+class MapRDBDataReaderFactory(table: String,
+                              filters: List[Filter],
+                              schema: StructType,
+                              locations: Array[String],
+                              queryJson: String) extends DataReaderFactory[Row] with Logging {
 
   import org.ojai.store._
 
@@ -26,36 +28,25 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
 
     queryResult.asScala.iterator
   }
-  
+
   private def query: Query = {
 
-    val queryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
+    val sparkFiltersQueryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
-    val builtQueryString = if( queryJson == "{}" ) {
-      queryCondition.asJsonString
-    } else {
-      "{\"$and\":[" + queryJson + "," + queryCondition.asJsonString + "]}"
-    }
-    log.trace(s"Using query string: $builtQueryString")
+    val finalQueryConditionString = QueryConditionBuilder.addTabletInfo(queryJson, sparkFiltersQueryCondition)
+
+    log.trace(s"Using query string: $finalQueryConditionString")
 
     log.trace(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
     val query = connection
       .newQuery()
-      .where(builtQueryString)
+      .where(finalQueryConditionString)
       .select(projectionsNames: _*)
       .build()
 
     query
   }
-
-  def projectionsAsString: String =
-    schema
-      .fields
-      .foldLeft(List.empty[(String, DataType)])((xs, field) => (field.name, field.dataType) :: xs)
-      .mkString("[", ",", "]")
-
-  def projectionsNames: Array[String] = schema.fields.map(_.name)
 
   override def preferredLocations(): Array[String] = locations
 
@@ -81,5 +72,13 @@ class MapRDBDataReaderFactory(table: String, filters: List[Filter], schema: Stru
       connection.close()
     }
   }
+
+  private def projectionsAsString: String =
+    schema
+      .fields
+      .foldLeft(List.empty[(String, DataType)])((xs, field) => (field.name, field.dataType) :: xs)
+      .mkString("[", ",", "]")
+
+  private def projectionsNames: Array[String] = schema.fields.map(_.name)
 }
 

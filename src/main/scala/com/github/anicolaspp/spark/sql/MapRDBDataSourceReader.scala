@@ -11,7 +11,7 @@ import org.apache.spark.sql.types.StructType
 import com.mapr.db.spark.MapRDBSpark
 
 class MapRDBDataSourceReader(schema: StructType, tablePath: String)
-    extends DataSourceReader
+  extends DataSourceReader
     with Logging
     with SupportsPushDownFilters
     with SupportsPushDownRequiredColumns {
@@ -23,26 +23,30 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
   private var projections: Option[StructType] = None
 
   override def readSchema(): StructType = projections match {
-    case None                  => schema
+    case None => schema
     case Some(fieldsToProject) => fieldsToProject
   }
 
   override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] = {
-    com.mapr.db.MapRDB.getTable(tablePath).getTabletInfos
-      .map(descriptor => {
-        log.trace("Adding descriptor with locations("+descriptor.getLocations.mkString(",")+") and query " + descriptor.getCondition.asJsonString)
-        new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema(), descriptor.getLocations,descriptor.getCondition.asJsonString)
-      }).toList
+    com.mapr.db.MapRDB
+      .getTable(tablePath)
+      .getTabletInfos
+      .map { descriptor =>
+        logTabletInfo(descriptor)
+
+        new MapRDBDataReaderFactory(tablePath, supportedFilters, readSchema(), descriptor.getLocations, descriptor.getCondition.asJsonString)
+      }
+      .toList
   }
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
-    
+
     val (supported, unsupported) = filters.partition {
       case _: And => true
       case _: Or => true
       case _: IsNull => true
       case _: IsNotNull => true
-      case _: In  => true
+      case _: In => true
       case _: StringStartsWith => true
       case _: EqualTo => true
       case _: LessThan => true
@@ -61,4 +65,8 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
   override def pushedFilters(): Array[Filter] = supportedFilters.toArray
 
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
+
+  private def logTabletInfo(descriptor: com.mapr.db.TabletInfo): Unit = {
+    log.trace("Adding descriptor with locations(" + descriptor.getLocations.mkString(",") + ") and query " + descriptor.getCondition.asJsonString)
+  }
 }

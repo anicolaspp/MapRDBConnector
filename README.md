@@ -50,7 +50,7 @@ QUERY PLAN: {"QueryPlan":[
 
 ### Giving Index Hints
 
-Sometimes we know the filter(s) involved in the query and it will be good if we could help OJAI a little bit by given hints about the know index(es). 
+Sometimes we know the filter(s) involved in the query and it will be good if we could help OJAI a little bit by given hints about the known index(es). 
 
 The following code shows how to add index hints
 

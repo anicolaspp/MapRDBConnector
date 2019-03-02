@@ -10,7 +10,7 @@ object QueryConditionBuilder extends Logging {
 
   def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): QueryCondition = createFilterCondition(filters)
 
-  def addTabletInfo(queryJson: String, queryCondition: QueryCondition) =
+  def addTabletInfo(queryJson: String, queryCondition: QueryCondition): String =
     if (queryJson == "{}") {
       queryCondition.asJsonString
     } else {

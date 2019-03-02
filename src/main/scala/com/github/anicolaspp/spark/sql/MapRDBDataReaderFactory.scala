@@ -18,10 +18,8 @@ import org.apache.spark.sql.types._
 class MapRDBDataReaderFactory(table: String,
                               filters: List[Filter],
                               schema: StructType,
-                              locations: Array[String],
-                              queryJson: String)
-  extends DataReaderFactory[Row]
-    with Logging {
+                              tabletInfo: MapRDBTabletInfo)
+  extends DataReaderFactory[Row] with Logging {
 
   import org.ojai.store._
 
@@ -35,7 +33,7 @@ class MapRDBDataReaderFactory(table: String,
 
     val queryResult = store.find(query)
 
-    log.trace(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
+    log.debug(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
 
     queryResult.asScala.iterator
   }
@@ -44,11 +42,11 @@ class MapRDBDataReaderFactory(table: String,
 
     val sparkFiltersQueryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
-    val finalQueryConditionString = QueryConditionBuilder.addTabletInfo(queryJson, sparkFiltersQueryCondition)
+    val finalQueryConditionString = QueryConditionBuilder.addTabletInfo(tabletInfo.queryJson, sparkFiltersQueryCondition)
 
-    log.trace(s"USING QUERY STRING: $finalQueryConditionString")
+    log.debug(s"USING QUERY STRING: $finalQueryConditionString")
 
-    log.trace(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
+    log.debug(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
     val query = connection
       .newQuery()
@@ -59,7 +57,7 @@ class MapRDBDataReaderFactory(table: String,
     query
   }
 
-  override def preferredLocations(): Array[String] = locations
+  override def preferredLocations(): Array[String] = tabletInfo.locations
 
   override def createDataReader(): DataReader[Row] = new DataReader[Row] {
 
@@ -71,10 +69,10 @@ class MapRDBDataReaderFactory(table: String,
 
       val document = documents.next()
 
-      log.trace(document.asJsonString())
+      log.debug(document.asJsonString())
 
       val values = schema.fields
-        .foldLeft(List.empty[Any])((xs, field) =>  document.get(field) :: xs)
+        .foldLeft(List.empty[Any])((xs, field) => document.get(field) :: xs)
         .reverse
 
       Row.fromSeq(values)
@@ -85,6 +83,8 @@ class MapRDBDataReaderFactory(table: String,
       connection.close()
     }
   }
+
+  override protected def logName: String = super.logName + s"===== TABLE ${tabletInfo.internalId}"
 
   private def projectionsAsString: String =
     schema

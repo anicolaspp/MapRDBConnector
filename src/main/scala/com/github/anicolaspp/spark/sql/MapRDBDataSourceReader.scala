@@ -34,7 +34,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
       .map { case (descriptor, idx) =>
         logTabletInfo(descriptor, idx)
 
-        descriptor
+        MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString)
       }
       .map(createReaderFactory)
       .toList
@@ -52,13 +52,12 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
 
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 
-  private def createReaderFactory(descriptor: TabletInfo) =
+  private def createReaderFactory(tabletInfo: MapRDBTabletInfo) =
     new MapRDBDataReaderFactory(
       tablePath,
       supportedFilters,
       readSchema(),
-      descriptor.getLocations,
-      descriptor.getCondition.asJsonString)
+      tabletInfo)
 
   private def isSupportedFilter(filter: Filter) = filter match {
     case _: And => true
@@ -77,10 +76,10 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
   }
 
   private def logTabletInfo(descriptor: com.mapr.db.TabletInfo, tabletIndex: Int) =
-    log.trace(
+    log.debug(
       s"TABLET: $tabletIndex ; " +
-        s"ESTIMATED NUM ROWS: ${descriptor.getEstimatedNumRows} ; " +
         s"PREFERRED LOCATIONS: ${descriptor.getLocations.mkString("[", ",", "]")} ; " +
-        s"QUERY: ${descriptor.getCondition}")
-
+        s"QUERY: ${descriptor.getCondition.asJsonString()}")
 }
+
+case class MapRDBTabletInfo private[sql](internalId: Int, locations: Array[String], queryJson: String)

@@ -26,7 +26,7 @@ object QueryConditionBuilder extends Logging {
     * @return
     */
   private def createFilterCondition(filters: List[Filter])(implicit connection: Connection): QueryCondition = {
-    log.trace(s"FILTERS TO PUSH DOWN: $filters")
+    log.debug(s"FILTERS TO PUSH DOWN: $filters")
 
     val andCondition = connection.newCondition().and()
 
@@ -35,7 +35,7 @@ object QueryConditionBuilder extends Logging {
       .close()
       .build()
 
-    log.trace(s"FINAL OJAI QUERY CONDITION: ${finalCondition.toString}")
+    log.debug(s"FINAL OJAI QUERY CONDITION: ${finalCondition.toString}")
 
     finalCondition
   }
@@ -51,7 +51,7 @@ object QueryConditionBuilder extends Logging {
     */
   private def evalFilter(filter: Filter)(implicit connection: Connection): QueryCondition = {
 
-    log.trace("evalFilter: " + filter.toString)
+    log.debug("evalFilter: " + filter.toString)
 
     val condition = filter match {
 
@@ -89,7 +89,7 @@ object QueryConditionBuilder extends Logging {
       case ge@GreaterThanOrEqual(_, _) => evalGreaterThanEqual(ge)
     }
 
-    log.trace("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)
+    log.debug("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)
 
     simpleCondition.build()
   }

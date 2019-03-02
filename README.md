@@ -30,7 +30,7 @@ val schema = StructType(Seq(StructField("_id", StringType), StructField("first_n
 When running the code above, our **MapRDBConnector** uses the corresponding MapR-DB secondary. We can examine the output of the underlyign OJAI object to make sure that, in fact, it uses the secondary index. Notice the `"indexName":"uid_idx"` which indicates that the index `uid` is being used when running the query. 
 
 
-```
+```json
 QUERY PLAN: {"QueryPlan":[
   [{
     "streamName":"DBDocumentStream",

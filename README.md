@@ -48,6 +48,19 @@ QUERY PLAN: {"QueryPlan":[
 ]}
 ```
 
+### Giving Index Hints
+
+Sometimes we know the filter(s) involved in the query and it will be good if we could help OJAI a little bit by given hints about the know index(es). 
+
+The following code shows how to add index hints
+
+```scala
+ sparkSession
+    .loadFromMapRDB("/user/mapr/tables/from_parquet", schema, "idx_2")
+    .filter("_2 = 'n2078258460719121947'")
+    .show()
+```
+
 ## Projections and Filters Push Down
 
 Our **MapRDBConnector** is able to push every projection down. In other worlds, if we run the following query, our **MapRDBConnector** makes sure that only the projected columns are read from MapR-DB reducing the amount of data being transferred. 

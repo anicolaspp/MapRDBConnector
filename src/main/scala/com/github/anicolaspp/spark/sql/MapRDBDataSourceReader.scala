@@ -9,7 +9,7 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
 
-class MapRDBDataSourceReader(schema: StructType, tablePath: String)
+class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
   extends DataSourceReader
     with Logging
     with SupportsPushDownFilters
@@ -57,7 +57,8 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String)
       tablePath,
       supportedFilters,
       readSchema(),
-      tabletInfo)
+      tabletInfo,
+      hintedIndexes)
 
   private def isSupportedFilter(filter: Filter) = filter match {
     case _: And => true

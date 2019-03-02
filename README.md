@@ -65,3 +65,10 @@ val schema = StructType(Seq(StructField("_id", StringType), StructField("first_n
 ```
 
 In the same way we can push filters down to MapR-DB. It is import to notice (our main feature) that is the column being used for the filter is a secondary index, then it will be used to narrow in a very performant way the rows required. 
+
+## Reading Parallelism and Data Locality
+
+Our **MapRDBConnector** is able to read the Table information (thanks to @iulianov) and it lauches a task for each Table region.
+
+In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the reading task as close as possible to where the corresponding Table region lives in the cluster. In other words, if `region 1` lives in node `10.20.30.40`, our library passes this information to Spark so that when Spark launches the reading task for `region 1` it puts it on an executor running on the same node `10.20.30.40`. This is up to Spark and the resources availability, but we provide all information Spark needs to sucessfully maintain data locatily. 
+

@@ -16,14 +16,14 @@ object MapRDB {
         .load(path)
     }
 
-    def loadFromMapRDB(path: String, schema: StructType, idxs: String*): DataFrame = {
-      sparkSession
-        .read
-        .format("com.github.anicolaspp.spark.sql.Reader")
-        .option("idx", idxs.mkString(","))
-        .schema(schema)
-        .load(path)
-    }
+//    def loadFromMapRDB(path: String, schema: StructType, idxs: String*): DataFrame = {
+//      sparkSession
+//        .read
+//        .format("com.github.anicolaspp.spark.sql.Reader")
+//        .option("idx", idxs.mkString(","))
+//        .schema(schema)
+//        .load(path)
+//    }
   }
 
 }

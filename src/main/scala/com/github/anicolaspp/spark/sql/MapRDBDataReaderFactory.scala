@@ -27,7 +27,7 @@ class MapRDBDataReaderFactory(table: String,
 
   import scala.collection.JavaConverters._
 
-  import IndexHints._
+//  import IndexHints._
 
   @transient private lazy val connection = DriverManager.getConnection("ojai:mapr:")
 
@@ -55,7 +55,6 @@ class MapRDBDataReaderFactory(table: String,
 
     val query = connection
       .newQuery()
-      .addHints(hintedIndexes, tabletInfo.internalId)
       .where(finalQueryConditionString)
       .select(projectionsNames: _*)
       .build()
@@ -101,15 +100,15 @@ class MapRDBDataReaderFactory(table: String,
   private def projectionsNames: Array[String] = schema.fields.map(_.name)
 }
 
-object IndexHints {
+//object IndexHints {
+//
+//  implicit class HintedQuery(query: Query) {
+//    def addHints(hints: List[String], readerId: Int): Query =
+//      if (readerId == 2) {
+//        hints.foldLeft(query)((q, hint) => q.setOption("ojai.mapr.query.hint-using-index", hint))
+//      } else {
+//        query
+//      }
+//  }
 
-  implicit class HintedQuery(query: Query) {
-    def addHints(hints: List[String], readerId: Int): Query =
-      if (readerId == 0) {
-        hints.foldLeft(query)((q, hint) => q.setOption("ojai.mapr.query.hint-using-index", hint))
-      } else {
-        query
-      }
-  }
-
-}
+//}

@@ -100,15 +100,15 @@ class MapRDBDataReaderFactory(table: String,
   private def projectionsNames: Array[String] = schema.fields.map(_.name)
 }
 
-//object IndexHints {
-//
-//  implicit class HintedQuery(query: Query) {
-//    def addHints(hints: List[String], readerId: Int): Query =
-//      if (readerId == 2) {
-//        hints.foldLeft(query)((q, hint) => q.setOption("ojai.mapr.query.hint-using-index", hint))
-//      } else {
-//        query
-//      }
-//  }
+object IndexHints {
 
-//}
+  implicit class HintedQuery(query: Query) {
+    def addHints(hints: List[String], readerId: Int): Query =
+      if (readerId == 2) {
+        hints.foldLeft(query)((q, hint) => q.setOption("ojai.mapr.query.hint-using-index", hint))
+      } else {
+        query
+      }
+  }
+
+}

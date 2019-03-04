@@ -27,12 +27,16 @@ object App {
 
     val schema = StructType(Seq(StructField("_id", StringType), StructField("_2", StringType)))//StructField("first_name", StringType), StructField("uid", StringType)))
 
-    sparkSession
+    val data = sparkSession
       .loadFromMapRDB("/user/mapr/tables/from_parquet", schema)
       .filter("_2 = 'n2078258460719121947'")
 //      .filter("uid = '101'")
 //      .select("_id", "first_name")
-      .show()
+
+
+    println(s"MY SCHEMA: ${data.schema}")
+
+    data.show()
     
 //    sparkSession
 //      .loadFromMapRDB("/user/mapr/tables/data", schema)

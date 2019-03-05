@@ -9,6 +9,7 @@ import org.ojai.store.Query
 import org.ojai.{Value,Document}
 import org.ojai.types._
 import collection.JavaConverters._
+import com.mapr.db.rowcol.DBList
 
 /**
   * Reads data from one particular MapR-DB tablet / region
@@ -99,12 +100,17 @@ class MapRDBDataReaderFactory(table: String,
       Row.fromSeq(values)
     }
 
+    private def createArray(array: Array[Object]): Array[Any] = {
+      array.map(getValue)
+    }
+
     private def getValue(value: Any): Any = {
       value match {
         case v: OTimestamp => new java.sql.Timestamp(v.getMilliSecond)
         case v: OTime => new java.sql.Timestamp(v.getMilliSecond)
         case v: ODate => v.toDate
         case v: java.util.Map[String,Object] => createMap(v)
+        case v: DBList => createArray(v.toArray())
         case v: Any => v
       }
     }
@@ -112,7 +118,7 @@ class MapRDBDataReaderFactory(table: String,
     private def getField(doc: Document, field: StructField): Any = {
       val value = doc.getValue(field.name)
       value.getType match {
-        case Value.Type.ARRAY => value.getList.toArray //TODO: handle array of maps/OJAI types
+        case Value.Type.ARRAY => createArray(value.getList.toArray)
         case Value.Type.BINARY => value.getBinary
         case Value.Type.BOOLEAN => value.getBoolean
         case Value.Type.BYTE => value.getByte

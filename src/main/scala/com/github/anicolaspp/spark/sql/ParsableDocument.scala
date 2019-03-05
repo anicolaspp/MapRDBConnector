@@ -13,28 +13,24 @@ object ParsableDocument {
   implicit class ParsableDocument(document: Document) {
     def get(field: StructField) = getField(document, field)
 
-    private def getField(doc: Document, field: StructField): Any = {
-      val value = doc.getValue(field.name)
-
-      value.getType match {
-        case Value.Type.ARRAY => createArray(value.getList.toArray)
-        case Value.Type.BINARY => value.getBinary
-        case Value.Type.BOOLEAN => value.getBoolean
-        case Value.Type.BYTE => value.getByte
-        case Value.Type.DATE => value.getDate.toDate
-        case Value.Type.DECIMAL => value.getDecimal
-        case Value.Type.DOUBLE => value.getDouble
-        case Value.Type.FLOAT => value.getFloat
-        case Value.Type.INT => value.getInt
-        case Value.Type.INTERVAL => null //TODO: Find the actual type that corresponds to this
-        case Value.Type.LONG => value.getLong
-        case Value.Type.MAP => createMap(value.getMap)
-        case Value.Type.NULL => null
-        case Value.Type.SHORT => value.getShort
-        case Value.Type.STRING => value.getString
-        case Value.Type.TIME => new java.sql.Timestamp(value.getTime.getMilliSecond)
-        case Value.Type.TIMESTAMP => new java.sql.Timestamp(value.getTimestamp.getMilliSecond)
-      }
+    private def getField(doc: Document, field: StructField): Any = (doc.getValue(field.name), doc.getValue(field.name).getType) match {
+      case (value, Value.Type.ARRAY) => createArray(value.getList.toArray)
+      case (value, Value.Type.BINARY) => value.getBinary
+      case (value, Value.Type.BOOLEAN) => value.getBoolean
+      case (value, Value.Type.BYTE) => value.getByte
+      case (value, Value.Type.DATE) => value.getDate.toDate
+      case (value, Value.Type.DECIMAL) => value.getDecimal
+      case (value, Value.Type.DOUBLE) => value.getDouble
+      case (value, Value.Type.FLOAT) => value.getFloat
+      case (value, Value.Type.INT) => value.getInt
+      case (value, Value.Type.INTERVAL) => null //TODO: Find the actual type that corresponds to this
+      case (value, Value.Type.LONG) => value.getLong
+      case (value, Value.Type.MAP) => createMap(value.getMap)
+      case (value, Value.Type.NULL) => null
+      case (value, Value.Type.SHORT) => value.getShort
+      case (value, Value.Type.STRING) => value.getString
+      case (value, Value.Type.TIME) => new java.sql.Timestamp(value.getTime.getMilliSecond)
+      case (value, Value.Type.TIMESTAMP) => new java.sql.Timestamp(value.getTimestamp.getMilliSecond)
     }
 
     private def getValue(value: Any): Any = {

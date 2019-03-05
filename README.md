@@ -1,5 +1,5 @@
 # MapRDBConnector
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.anicolaspp/maprdbconnector_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.anicolaspp/MapRDBConnector) [![Build Status](https://travis-ci.org/anicolaspp/MapRDBConnector.svg?branch=master)](https://travis-ci.org/anicolaspp/MapRDBConnector)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.anicolaspp/maprdbconnector_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.anicolaspp/maprdbconnector_2.11) [![Build Status](https://travis-ci.org/anicolaspp/MapRDBConnector.svg?branch=master)](https://travis-ci.org/anicolaspp/MapRDBConnector)
 
 An independent MapR-DB Connector for Apache Spark that fully utilizes MapR-DB secondary indexes.
 

@@ -1,6 +1,8 @@
 # MapRDBConnector
 An independent MapR-DB Connector for Apache Spark that fully utilizes MapR-DB secondary indexes.
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.anicolaspp/maprdbconnector_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.anicolaspp/MapRDBConnector)
+
 The main idea behind implementing a new **MapR-DB Connector for Apache Spark** is to overcome the current limitations of the official connector. 
 
 ## MapR-DB Secondary Indexes

@@ -1,6 +1,4 @@
 
-import ReleaseTransformations._
-
 name := "MapRDBConnector"
 
 version := "1.0.0-SNAPSHOT"
@@ -44,25 +42,25 @@ lazy val maprdbconnector = project.in(file("."))
 
     pomIncludeRepository := { _ => true },
 
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      setReleaseVersion,
-      commitReleaseVersion,
-      tagRelease,
-      publishArtifacts,
-      setNextVersion,
-      commitNextVersion,
-      ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
-      pushChanges
-    ),
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  pushChanges
+),
 
     resolvers += "MapR Releases" at "http://repository.mapr.com/maven/",
 
     resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-
+    
     libraryDependencies ++= Seq(
       "org.apache.spark" % "spark-core_2.11" % "2.3.2" % "provided",
       "org.apache.spark" % "spark-sql_2.11" % "2.3.2" % "provided",

@@ -83,4 +83,4 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
         s"QUERY: ${descriptor.getCondition.asJsonString()}")
 }
 
-case class MapRDBTabletInfo private[sql](internalId: Int, locations: Array[String], queryJson: String)
+

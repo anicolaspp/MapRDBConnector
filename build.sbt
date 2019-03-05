@@ -3,7 +3,7 @@ import ReleaseTransformations._
 
 name := "MapRDBConnector"
 
-version := "1.0.0-SNAPSHOT"
+version := "1.0.0"
 
 scalaVersion := "2.11.8"
 

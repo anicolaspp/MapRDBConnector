@@ -46,6 +46,8 @@ lazy val maprdbconnector = project.in(file("."))
 
     pomIncludeRepository := { _ => true },
 
+    releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+
 
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,              // : ReleaseStep

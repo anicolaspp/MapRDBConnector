@@ -2,7 +2,6 @@ package com.github.anicolaspp.spark.sql
 
 import java.util
 
-import com.mapr.db.TabletInfo
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
@@ -53,7 +52,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 
   private def createReaderFactory(tabletInfo: MapRDBTabletInfo) =
-    new MapRDBDataReaderFactory(
+    new MapRDBDataPartitionReader(
       tablePath,
       supportedFilters,
       readSchema(),

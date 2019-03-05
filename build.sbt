@@ -42,6 +42,21 @@ lazy val maprdbconnector = project.in(file("."))
 
     pomIncludeRepository := { _ => true },
 
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+  pushChanges
+),
+
     resolvers += "MapR Releases" at "http://repository.mapr.com/maven/",
 
     resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",

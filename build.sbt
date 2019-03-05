@@ -1,9 +1,12 @@
+import ReleaseTransformations._
 
 name := "MapRDBConnector"
 
 version := "1.0.0-SNAPSHOT"
 
 scalaVersion := "2.11.8"
+
+organization in ThisBuild := "com.github.anicolaspp"
 
 
 lazy val maprdbconnector = project.in(file("."))
@@ -22,6 +25,7 @@ lazy val maprdbconnector = project.in(file("."))
       </developer>
       <developer>
         <name>Ivan Ulianov</name>
+        <email>iulianov@gmail.com</email>
         <organization>iulianov</organization>
         <organizationUrl>https://github.com/iulianov</organizationUrl>
       </developer>
@@ -41,6 +45,22 @@ lazy val maprdbconnector = project.in(file("."))
     publishArtifact in Test := false,
 
     pomIncludeRepository := { _ => true },
+
+
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,              // : ReleaseStep
+      inquireVersions,                        // : ReleaseStep
+      runClean,                               // : ReleaseStep
+      runTest,                                // : ReleaseStep
+      setReleaseVersion,                      // : ReleaseStep
+      commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+      tagRelease,                             // : ReleaseStep
+      publishArtifacts,                       // : ReleaseStep, checks whether `publishTo` is properly set up
+      setNextVersion,                         // : ReleaseStep
+      commitNextVersion,                      // : ReleaseStep
+      pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+    ),
+
 
     resolvers += "MapR Releases" at "http://repository.mapr.com/maven/",
 

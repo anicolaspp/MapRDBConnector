@@ -4,6 +4,7 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import org.ojai.types.{ODate, OTime, OTimestamp}
 import org.ojai.{Document, Value}
+import com.mapr.db.rowcol.DBList
 
 object ParsableDocument {
 
@@ -16,7 +17,7 @@ object ParsableDocument {
       val value = doc.getValue(field.name)
 
       value.getType match {
-        case Value.Type.ARRAY => value.getList.toArray //TODO: handle array of maps/OJAI types
+        case Value.Type.ARRAY => createArray(value.getList.toArray)
         case Value.Type.BINARY => value.getBinary
         case Value.Type.BOOLEAN => value.getBoolean
         case Value.Type.BYTE => value.getByte
@@ -42,6 +43,7 @@ object ParsableDocument {
         case v: OTime => new java.sql.Timestamp(v.getMilliSecond)
         case v: ODate => v.toDate
         case v: java.util.Map[String, Object] => createMap(v)
+        case v: DBList => createArray(v.toArray())
         case v: Any => v
       }
     }
@@ -55,6 +57,10 @@ object ParsableDocument {
         .reverse
 
       Row.fromSeq(values)
+    }
+
+    private def createArray(array: Array[Object]): Array[Any] = {
+      array.map(getValue)
     }
   }
 

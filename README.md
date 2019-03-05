@@ -5,6 +5,18 @@ An independent MapR-DB Connector for Apache Spark that fully utilizes MapR-DB se
 
 The main idea behind implementing a new **MapR-DB Connector for Apache Spark** is to overcome the current limitations of the official connector. 
 
+```xml
+<dependency>
+  <groupId>com.github.anicolaspp</groupId>
+  <artifactId>maprdbconnector_2.11</artifactId>
+  <version>1.0.2</version>
+</dependency>
+```
+
+```
+libraryDependencies += "com.github.anicolaspp" % "maprdbconnector_2.11" % "1.0.2"
+```
+
 ## MapR-DB Secondary Indexes
 
 MapR-DB automatically indexes the field `_id` and we can manually add many more indexes that can help to speed up queries that use the defined indexes. **Apache Drill**, for instance, makes use of the defined indexes for the tables being queried so the underlying computations are greatly speeded up. 

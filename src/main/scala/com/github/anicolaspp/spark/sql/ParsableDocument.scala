@@ -1,39 +1,68 @@
 package com.github.anicolaspp.spark.sql
 
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
+import org.ojai.types.{ODate, OTime, OTimestamp}
 import org.ojai.{Document, Value}
+import com.mapr.db.rowcol.DBList
 
 object ParsableDocument {
 
-  implicit class ParsableDocument(document: Document) {
-    def get(field: StructField): Any = getAnyFromDocument(document, field.name, field.dataType)
+  import collection.JavaConverters._
 
-    private def getAnyFromDocument(doc: Document, name: String, dataType: DataType) = dataType match {
-      case BinaryType => doc.getBinary(name)
-      case BooleanType => doc.getBooleanObj(name)
-      case ByteType => doc.getByteObj(name)
-      case DateType => doc.getDate(name)
-      case _: DecimalType => doc.getDecimal(name)
-      case DoubleType => doc.getDoubleObj(name)
-      case FloatType => doc.getFloatObj(name)
-      case IntegerType => doc.getIntObj(name)
-      case ArrayType(_, _) => doc.getList(name) //TODO Need to check what happens in the regular connector
-      case LongType => doc.getLongObj(name)
-      case StructType(_) => doc.getMap(name) //TODO This might need to be done recursively based on the values in the StructType
-      case ShortType => doc.getShortObj(name)
-      case StringType => doc.getString(name)
-      case TimestampType => {
-        val valObj = doc.getValue(name)
-        if (valObj.getType == Value.TYPE_CODE_TIME) {
-          new java.sql.Timestamp(valObj.getTime.getMilliSecond)
-        } else {
-          new java.sql.Timestamp(valObj.getTimestamp.getMilliSecond)
-        }
+  implicit class ParsableDocument(document: Document) {
+    def get(field: StructField) = getField(document, field)
+
+    private def getField(doc: Document, field: StructField): Any = {
+      val value = doc.getValue(field.name)
+
+      value.getType match {
+        case Value.Type.ARRAY => createArray(value.getList.toArray)
+        case Value.Type.BINARY => value.getBinary
+        case Value.Type.BOOLEAN => value.getBoolean
+        case Value.Type.BYTE => value.getByte
+        case Value.Type.DATE => value.getDate.toDate
+        case Value.Type.DECIMAL => value.getDecimal
+        case Value.Type.DOUBLE => value.getDouble
+        case Value.Type.FLOAT => value.getFloat
+        case Value.Type.INT => value.getInt
+        case Value.Type.INTERVAL => null //TODO: Find the actual type that corresponds to this
+        case Value.Type.LONG => value.getLong
+        case Value.Type.MAP => createMap(value.getMap)
+        case Value.Type.NULL => null
+        case Value.Type.SHORT => value.getShort
+        case Value.Type.STRING => value.getString
+        case Value.Type.TIME => new java.sql.Timestamp(value.getTime.getMilliSecond)
+        case Value.Type.TIMESTAMP => new java.sql.Timestamp(value.getTimestamp.getMilliSecond)
       }
-      //TODO this will probably not automatically convert from OInterval to CalendarIntervalType
-      // It seems that this will need to be convert to a correct string representation
-      case CalendarIntervalType => doc.getInterval(name)
-      case _ => throw new IllegalArgumentException(s"Unknown type $dataType for field $name")
+    }
+
+    private def getValue(value: Any): Any = {
+      value match {
+        case v: OTimestamp => new java.sql.Timestamp(v.getMilliSecond)
+        case v: OTime => new java.sql.Timestamp(v.getMilliSecond)
+        case v: ODate => v.toDate
+        case v: java.util.Map[String, Object] => createMap(v)
+        case v: DBList => createArray(v.toArray())
+        case v: Any => v
+      }
+    }
+
+    private def createMap(map: java.util.Map[String, Object]): Row = {
+      val scalaMap = map.asScala
+
+      val values = scalaMap
+        .keySet
+        .foldLeft(List.empty[Any])((xs, field) => getValue(scalaMap(field)) :: xs)
+        .reverse
+
+      Row.fromSeq(values)
+    }
+
+    private def createArray(array: Array[Object]): Array[Any] = {
+      array.map(getValue)
     }
   }
+
+
 }

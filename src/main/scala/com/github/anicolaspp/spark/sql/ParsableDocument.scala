@@ -23,10 +23,10 @@ object ParsableDocument {
       case (value, Value.Type.DOUBLE) => value.getDouble
       case (value, Value.Type.FLOAT) => value.getFloat
       case (value, Value.Type.INT) => value.getInt
-      case (value, Value.Type.INTERVAL) => null //TODO: Find the actual type that corresponds to this
+      case (_, Value.Type.INTERVAL) => null //TODO: Find the actual type that corresponds to this
       case (value, Value.Type.LONG) => value.getLong
       case (value, Value.Type.MAP) => createMap(value.getMap)
-      case (value, Value.Type.NULL) => null
+      case (_, Value.Type.NULL) => null
       case (value, Value.Type.SHORT) => value.getShort
       case (value, Value.Type.STRING) => value.getString
       case (value, Value.Type.TIME) => new java.sql.Timestamp(value.getTime.getMilliSecond)

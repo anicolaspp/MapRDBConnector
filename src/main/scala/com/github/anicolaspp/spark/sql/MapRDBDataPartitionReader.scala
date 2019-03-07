@@ -9,11 +9,10 @@ import org.apache.spark.sql.types._
 /**
   * Reads data from one particular MapR-DB tablet / region
   *
-  * @param table     MapR-DB Table Path
-  * @param filters   Filters to be pushed down
-  * @param schema    Schema to be pushed down
-  * @param locations Preferred location where this task is executed by Spark in order to maintain data locality
-  * @param queryJson Extra query to better perform the filtering based on the data for this tablet / region (JSON FORMAT)
+  * @param table      MapR-DB Table Path
+  * @param filters    Filters to be pushed down
+  * @param schema     Schema to be pushed down
+  * @param tabletInfo Specific information of the tablet being used by this reader
   */
 class MapRDBDataPartitionReader(table: String,
                                 filters: List[Filter],
@@ -25,8 +24,6 @@ class MapRDBDataPartitionReader(table: String,
   import org.ojai.store._
 
   import scala.collection.JavaConverters._
-
-  //  import IndexHints._
 
   @transient private lazy val connection = DriverManager.getConnection("ojai:mapr:")
 
@@ -48,6 +45,7 @@ class MapRDBDataPartitionReader(table: String,
     val finalQueryConditionString = QueryConditionBuilder.addTabletInfo(tabletInfo.queryJson, sparkFiltersQueryCondition)
 
     log.debug(s"USING QUERY STRING: $finalQueryConditionString")
+
 
     log.debug(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
     
@@ -85,8 +83,8 @@ class MapRDBDataPartitionReader(table: String,
     }
 
   }
-  
-  override protected def logName: String = super.logName + s"===== TABLE ${tabletInfo.internalId}"
+
+  override protected def logName: String = super.logName + s" ===== TABLET: ${tabletInfo.internalId}"
 
   private def projectionsAsString: String =
     schema

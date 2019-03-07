@@ -81,7 +81,7 @@ object QueryConditionBuilder extends Logging {
       case IsNull(field) => connection.newCondition().notExists(field)
       case IsNotNull(field) => connection.newCondition().exists(field)
       case In(field, values) => connection.newCondition().in(field, values.toList)
-      case StringStartsWith(field, value) => connection.newCondition().like(field, value)
+      case StringStartsWith(field, value) => connection.newCondition().matches(field, value)
       case eq@EqualTo(_, _) => evalEqualTo(eq)
       case lt@LessThan(_, _) => evalLessThan(lt)
       case le@LessThanOrEqual(_, _) => evalLessThanEqual(le)
@@ -89,7 +89,7 @@ object QueryConditionBuilder extends Logging {
       case ge@GreaterThanOrEqual(_, _) => evalGreaterThanEqual(ge)
     }
 
-    log.debug("evalSingleFilter: " + filter.toString + "===============" + simpleCondition.toString)
+    log.debug("evalSingleFilter: " + filter.toString + " =============== " + simpleCondition.toString)
 
     simpleCondition.build()
   }

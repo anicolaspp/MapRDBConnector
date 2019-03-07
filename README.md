@@ -105,4 +105,8 @@ In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the 
 
 - [MapR-DB Spark Connector Performance Tests](https://medium.com/@anicolaspp/mapr-db-spark-connector-performance-tests-2ec6e788e867)
 
+## Speed Comparison
 
+In the image below, RED is the official connector, BLUE ours. Less is better since it meassures the execution time of the query. 
+
+![](./Running Time.png)

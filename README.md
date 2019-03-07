@@ -109,4 +109,6 @@ In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the 
 
 In the image below, RED is the official connector, BLUE ours. Less is better since it meassures the execution time of the query. 
 
-![](./Running Time.png)
+![](
+        MapRDBConnector/Running Time.png
+      )

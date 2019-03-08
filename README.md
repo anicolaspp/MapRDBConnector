@@ -9,12 +9,12 @@ The main idea behind implementing a new **MapR-DB Connector for Apache Spark** i
 <dependency>
   <groupId>com.github.anicolaspp</groupId>
   <artifactId>maprdbconnector_2.11</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 
 ```
-libraryDependencies += "com.github.anicolaspp" % "maprdbconnector_2.11" % "1.0.2"
+libraryDependencies += "com.github.anicolaspp" % "maprdbconnector_2.11" % "1.0.3"
 ```
 
 ## MapR-DB Secondary Indexes

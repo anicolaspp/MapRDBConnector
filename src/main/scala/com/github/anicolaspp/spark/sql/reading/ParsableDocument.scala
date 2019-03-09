@@ -1,10 +1,10 @@
-package com.github.anicolaspp.spark.sql
+package com.github.anicolaspp.spark.sql.reading
 
+import com.mapr.db.rowcol.DBList
 import org.apache.spark.sql.Row
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.StructField
 import org.ojai.types.{ODate, OTime, OTimestamp}
 import org.ojai.{Document, Value}
-import com.mapr.db.rowcol.DBList
 
 object ParsableDocument {
 

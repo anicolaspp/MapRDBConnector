@@ -1,4 +1,4 @@
-package com.github.anicolaspp.spark.sql
+package com.github.anicolaspp.spark.sql.reading
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources._

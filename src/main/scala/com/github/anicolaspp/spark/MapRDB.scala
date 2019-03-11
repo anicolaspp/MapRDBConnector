@@ -1,8 +1,10 @@
-package com.github.anicolaspp.spark.sql
+package com.github.anicolaspp.spark
 
+
+import com.mapr.db.spark.MapRDBSpark
+import com.mapr.db.spark.utils.MapRSpark
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
 
 object MapRDB {
 
@@ -19,7 +21,7 @@ object MapRDB {
   }
 
   implicit class ExtendedDataFrame(df: DataFrame) {
-    def saveToMapRDB(path: String, withTransaction: Boolean = false): Unit = {
+    def writeToMapRDB(path: String, withTransaction: Boolean = false): Unit = {
 
       if (withTransaction) {
         df.write
@@ -27,10 +29,10 @@ object MapRDB {
           .save(path)
 
       } else {
+        MapRSpark.save(df, path, "_id", false, false)
 
-        com.mapr.db.spark.sql
-          .MapRDBDataFrameFunctions(df)
-          .saveToMapRDB(path)
+//        com.mapr.db.spark.sql.MapRDBDataFrameFunctions(df)
+//          .saveToMapRDB(path)
       }
 
 

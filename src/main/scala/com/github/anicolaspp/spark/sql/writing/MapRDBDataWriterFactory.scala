@@ -14,6 +14,8 @@ class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWri
 
   private val writtenIds = scala.collection.mutable.ListBuffer.empty[String]
 
+  private val sync = this
+
   override def createDataWriter(partitionId: Int, attemptNumber: Int): DataWriter[Row] = new DataWriter[Row] with Logging {
 
     log.info(s"PROCESSING PARTITION ID: $partitionId ; ATTEMPT: $attemptNumber")
@@ -26,7 +28,7 @@ class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWri
         .foldLeft(connection.newDocumentBuilder()) { case (acc, (name, idx)) => acc.put(name, record.getString(idx)) }
         .getDocument
 
-      this.synchronized {
+      sync.synchronized {
         if (!writtenIds.contains(doc.getIdString)) {
           store.insert(doc)
           writtenIds.append(doc.getIdString)

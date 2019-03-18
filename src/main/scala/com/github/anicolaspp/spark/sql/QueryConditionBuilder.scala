@@ -160,6 +160,7 @@ object QueryConditionBuilder extends Logging {
 
   /**
     * If we don't know how to parse an specific type, this condition matches all records
+    *
     * @param connection
     * @return
     */

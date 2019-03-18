@@ -1,5 +1,6 @@
 package com.github.anicolaspp.spark.sql
 
+import java.sql.Timestamp
 import java.util
 
 import org.apache.spark.internal.Logging
@@ -7,6 +8,8 @@ import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
+
+import scala.reflect.ClassTag
 
 class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
   extends DataSourceReader
@@ -58,19 +61,19 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
       readSchema(),
       tabletInfo,
       hintedIndexes)
-
-  private def isSupportedFilter(filter: Filter) = filter match {
-    case _: And => true
-    case _: Or => true
+  
+  private def isSupportedFilter(filter: Filter): Boolean = filter match {
+    case And(a, b) => isSupportedFilter(a) && isSupportedFilter(b)
+    case Or(a, b) => isSupportedFilter(a) || isSupportedFilter(b)
     case _: IsNull => true
     case _: IsNotNull => true
     case _: In => true
     case _: StringStartsWith => true
-    case _: EqualTo => true
-    case _: LessThan => true
-    case _: LessThanOrEqual => true
-    case _: GreaterThan => true
-    case _: GreaterThanOrEqual => true
+    case EqualTo(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case LessThan(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case LessThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case GreaterThan(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case GreaterThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
 
     case _ => false
   }
@@ -83,3 +86,17 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
 }
 
 
+object SupportedFilterTypes {
+  
+  private val supportedTypes = List[Class[_]](
+    classOf[Double],
+    classOf[Float],
+    classOf[Int],
+    classOf[Long],
+    classOf[Short],
+    classOf[String],
+    classOf[Timestamp]
+  )
+
+  def isSupportedType(value: Any): Boolean = supportedTypes.contains(value.getClass)
+}

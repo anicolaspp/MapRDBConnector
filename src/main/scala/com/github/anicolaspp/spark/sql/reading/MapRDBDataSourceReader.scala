@@ -1,5 +1,6 @@
 package com.github.anicolaspp.spark.sql.reading
 
+import java.sql.Timestamp
 import java.util
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
@@ -60,18 +61,18 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
       tabletInfo,
       hintedIndexes)
 
-  private def isSupportedFilter(filter: Filter) = filter match {
-    case _: And => true
-    case _: Or => true
+  private def isSupportedFilter(filter: Filter): Boolean = filter match {
+    case And(a, b) => isSupportedFilter(a) && isSupportedFilter(b)
+    case Or(a, b) => isSupportedFilter(a) || isSupportedFilter(b)
     case _: IsNull => true
     case _: IsNotNull => true
     case _: In => true
     case _: StringStartsWith => true
-    case _: EqualTo => true
-    case _: LessThan => true
-    case _: LessThanOrEqual => true
-    case _: GreaterThan => true
-    case _: GreaterThanOrEqual => true
+    case EqualTo(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case LessThan(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case LessThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case GreaterThan(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case GreaterThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
 
     case _ => false
   }
@@ -84,3 +85,19 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
 }
 
 
+object SupportedFilterTypes {
+
+  private val supportedTypes = List[Class[_]](
+    classOf[Double],
+    classOf[Float],
+    classOf[Int],
+    classOf[Long],
+    classOf[Short],
+    classOf[String],
+    classOf[Timestamp],
+    classOf[Boolean],
+    classOf[Byte]
+  )
+
+  def isSupportedType(value: Any): Boolean = supportedTypes.contains(value.getClass)
+}

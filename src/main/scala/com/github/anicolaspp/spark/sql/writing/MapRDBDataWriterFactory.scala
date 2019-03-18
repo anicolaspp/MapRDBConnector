@@ -1,5 +1,7 @@
 package com.github.anicolaspp.spark.sql.writing
 
+import com.mapr.db.MapRDB
+import com.mapr.db.spark.MapRDBSpark
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources.v2.writer.{DataWriter, DataWriterFactory, WriterCommitMessage}
@@ -24,8 +26,11 @@ class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWri
 
       val doc = schema
         .fields
-        .map(field => (field.name, schema.fieldIndex(field.name)))
-        .foldLeft(connection.newDocumentBuilder()) { case (acc, (name, idx)) => acc.put(name, record.getString(idx)) }
+        .foldLeft(connection.newDocumentBuilder()) { case (acc, field) =>
+          acc.put(
+            field.name,
+            com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(record.get(schema.fieldIndex(field.name)), field.dataType))
+        }
         .getDocument
 
       sync.synchronized {

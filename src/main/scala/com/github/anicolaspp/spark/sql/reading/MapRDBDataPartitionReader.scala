@@ -1,6 +1,8 @@
 package com.github.anicolaspp.spark.sql.reading
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
+import com.mapr.db.spark.MapRDBSpark
+import com.mapr.db.spark.RDD.OJAIDocumentRDDFunctions
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
@@ -71,11 +73,7 @@ class MapRDBDataPartitionReader(table: String,
 
       log.debug(document.asJsonString())
 
-      val values = schema.fields
-        .foldLeft(List.empty[Any])((xs, field) => ParsableDocument.ParsableDocument(document).get(field) :: xs)
-        .reverse
-
-      Row.fromSeq(values)
+      com.mapr.db.spark.sql.utils.MapRSqlUtils.documentToRow(MapRDBSpark.newDocument(document), schema)
     }
 
     override def close(): Unit = {

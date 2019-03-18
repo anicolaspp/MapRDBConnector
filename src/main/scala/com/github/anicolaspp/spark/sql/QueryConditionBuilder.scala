@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources._
+import org.apache.spark.sql.types.Decimal
 import org.ojai.store.{Connection, QueryCondition}
 import org.ojai.types.OTimestamp
 
@@ -104,8 +105,10 @@ object QueryConditionBuilder extends Logging {
     case EqualTo(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
     case EqualTo(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
     case EqualTo(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
+    case EqualTo(field, value: Boolean) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
+    case EqualTo(field, value: Byte) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
     case EqualTo(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, OTimestamp.parse(value.toInstant.toString))
+    case EqualTo(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.EQUAL,new OTimestamp(value.getTime))
 
     case EqualTo(_, _) => universalCondition
   }
@@ -116,8 +119,10 @@ object QueryConditionBuilder extends Logging {
     case LessThan(field, value: Int) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
     case LessThan(field, value: Long) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
     case LessThan(field, value: Short) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
+    case LessThan(field, value: Boolean) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
+    case LessThan(field, value: Byte) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
     case LessThan(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS, OTimestamp.parse(value.toInstant.toString))
+    case LessThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS, new OTimestamp(value.getTime))
 
     case LessThan(_, _) => universalCondition
   }
@@ -128,8 +133,10 @@ object QueryConditionBuilder extends Logging {
     case LessThanOrEqual(field, value: Int) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
     case LessThanOrEqual(field, value: Long) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
     case LessThanOrEqual(field, value: Short) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
+    case LessThanOrEqual(field, value: Boolean) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
+    case LessThanOrEqual(field, value: Byte) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
     case LessThanOrEqual(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS_OR_EQUAL, OTimestamp.parse(value.toInstant.toString))
+    case LessThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS_OR_EQUAL, new OTimestamp(value.getTime))
 
     case LessThanOrEqual(_, _) => universalCondition
   }
@@ -140,8 +147,10 @@ object QueryConditionBuilder extends Logging {
     case GreaterThan(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
     case GreaterThan(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
     case GreaterThan(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
+    case GreaterThan(field, value: Boolean) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
+    case GreaterThan(field, value: Byte) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
     case GreaterThan(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER, OTimestamp.parse(value.toInstant.toString))
+    case GreaterThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER, new OTimestamp(value.getTime))
 
     case GreaterThan(_, _) => universalCondition
   }
@@ -152,8 +161,10 @@ object QueryConditionBuilder extends Logging {
     case GreaterThanOrEqual(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
     case GreaterThanOrEqual(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
     case GreaterThanOrEqual(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Boolean) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Byte) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
     case GreaterThanOrEqual(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, OTimestamp.parse(value.toInstant.toString))
+    case GreaterThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, new OTimestamp(value.getTime))
 
     case GreaterThanOrEqual(_, _) => universalCondition
   }

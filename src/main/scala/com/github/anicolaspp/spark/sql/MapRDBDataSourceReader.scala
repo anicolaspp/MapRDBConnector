@@ -9,8 +9,6 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
 
-import scala.reflect.ClassTag
-
 class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
   extends DataSourceReader
     with Logging
@@ -61,7 +59,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
       readSchema(),
       tabletInfo,
       hintedIndexes)
-  
+
   private def isSupportedFilter(filter: Filter): Boolean = filter match {
     case And(a, b) => isSupportedFilter(a) && isSupportedFilter(b)
     case Or(a, b) => isSupportedFilter(a) || isSupportedFilter(b)
@@ -87,7 +85,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
 
 
 object SupportedFilterTypes {
-  
+
   private val supportedTypes = List[Class[_]](
     classOf[Double],
     classOf[Float],
@@ -95,7 +93,9 @@ object SupportedFilterTypes {
     classOf[Long],
     classOf[Short],
     classOf[String],
-    classOf[Timestamp]
+    classOf[Timestamp],
+    classOf[Boolean],
+    classOf[Byte]
   )
 
   def isSupportedType(value: Any): Boolean = supportedTypes.contains(value.getClass)

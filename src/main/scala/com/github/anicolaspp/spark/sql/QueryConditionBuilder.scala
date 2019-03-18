@@ -1,8 +1,11 @@
 package com.github.anicolaspp.spark.sql
 
+import java.sql.Timestamp
+
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources._
 import org.ojai.store.{Connection, QueryCondition}
+import org.ojai.types.OTimestamp
 
 object QueryConditionBuilder extends Logging {
 
@@ -102,8 +105,9 @@ object QueryConditionBuilder extends Logging {
     case EqualTo(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
     case EqualTo(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
     case EqualTo(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.EQUAL, value)
+    case EqualTo(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, OTimestamp.parse(value.toInstant.toString))
 
-    case EqualTo(_, _) => connection.newCondition()
+    case EqualTo(_, _) => universalCondition
   }
 
   private def evalLessThan(filter: LessThan)(implicit connection: Connection) = filter match {
@@ -113,8 +117,9 @@ object QueryConditionBuilder extends Logging {
     case LessThan(field, value: Long) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
     case LessThan(field, value: Short) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
     case LessThan(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
+    case LessThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS, OTimestamp.parse(value.toInstant.toString))
 
-    case LessThan(_, _) => connection.newCondition()
+    case LessThan(_, _) => universalCondition
   }
 
   private def evalLessThanEqual(filter: LessThanOrEqual)(implicit connection: Connection) = filter match {
@@ -124,8 +129,9 @@ object QueryConditionBuilder extends Logging {
     case LessThanOrEqual(field, value: Long) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
     case LessThanOrEqual(field, value: Short) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
     case LessThanOrEqual(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
+    case LessThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS_OR_EQUAL, OTimestamp.parse(value.toInstant.toString))
 
-    case LessThanOrEqual(_, _) => connection.newCondition()
+    case LessThanOrEqual(_, _) => universalCondition
   }
 
   private def evalGreaterThan(filter: GreaterThan)(implicit connection: Connection) = filter match {
@@ -135,8 +141,9 @@ object QueryConditionBuilder extends Logging {
     case GreaterThan(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
     case GreaterThan(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
     case GreaterThan(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
+    case GreaterThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER, OTimestamp.parse(value.toInstant.toString))
 
-    case GreaterThan(_, _) => connection.newCondition()
+    case GreaterThan(_, _) => universalCondition
   }
 
   private def evalGreaterThanEqual(filter: GreaterThanOrEqual)(implicit connection: Connection) = filter match {
@@ -146,7 +153,15 @@ object QueryConditionBuilder extends Logging {
     case GreaterThanOrEqual(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
     case GreaterThanOrEqual(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
     case GreaterThanOrEqual(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
+    case GreaterThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, OTimestamp.parse(value.toInstant.toString))
 
-    case GreaterThanOrEqual(_, _) => connection.newCondition()
+    case GreaterThanOrEqual(_, _) => universalCondition
   }
+
+  /**
+    * If we don't know how to parse an specific type, this condition matches all records
+    * @param connection
+    * @return
+    */
+  private def universalCondition(implicit connection: Connection) = connection.newCondition().exists("_id")
 }

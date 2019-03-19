@@ -3,10 +3,13 @@ package com.github.anicolaspp.spark.sql.writing
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources.v2.writer.{DataWriter, DataWriterFactory, WriterCommitMessage}
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{DataType, StructType}
+import org.ojai.DocumentBuilder
 import org.ojai.store.{DocumentStore, DriverManager}
 
 class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWriterFactory[Row] {
+
+  import com.mapr.db.spark.sql.utils.MapRSqlUtils._
 
   @transient private lazy val connection = DriverManager.getConnection("ojai:mapr:")
 
@@ -21,14 +24,12 @@ class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWri
     log.info(s"PROCESSING PARTITION ID: $partitionId ; ATTEMPT: $attemptNumber")
 
     override def write(record: Row): Unit = {
-      
+
       val doc = schema
         .fields
-        .foldLeft(connection.newDocumentBuilder()) { case (acc, field) =>
-          acc.put(
-            field.name,
-            com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(record.get(schema.fieldIndex(field.name)), field.dataType))
-        }
+        .zipWithIndex
+        .map { case (field, idx) => (field.name, idx, field.dataType) }
+        .foldLeft(connection.newDocumentBuilder()) { case x => foldOp(x, record) }
         .getDocument
 
       sync.synchronized {
@@ -37,6 +38,12 @@ class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWri
           writtenIds.append(doc.getIdString)
         }
       }
+    }
+
+    private type T = (DocumentBuilder, (String, Int, DataType))
+
+    private def foldOp(t: T, record: Row): DocumentBuilder = t match {
+      case (acc, (fieldName, idx, fieldType)) => acc.put(fieldName, convertToDataType(record.get(idx), fieldType))
     }
 
     override def commit(): WriterCommitMessage = {
@@ -53,4 +60,5 @@ class MapRDBDataWriterFactory(table: String, schema: StructType) extends DataWri
       log.info(s"PARTITION $partitionId CLEANED UP")
     }
   }
+
 }

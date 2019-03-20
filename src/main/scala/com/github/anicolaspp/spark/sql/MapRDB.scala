@@ -1,5 +1,7 @@
 package com.github.anicolaspp.spark.sql
 
+import java.util.stream.Collectors
+
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -63,12 +65,14 @@ object MapRDB {
               .select(schema.fields.map(_.name): _*)
               .build()
 
-            val result = store.find(query).asScala.map(_.asJsonString()).iterator
+            val result = store.find(query).asScala.foldLeft(List.empty[String]) { case (acc, doc) =>
+              doc.asJsonString() :: acc
+            }
 
             store.close()
             connection.close()
 
-            result
+            result.iterator
           }
         }
 

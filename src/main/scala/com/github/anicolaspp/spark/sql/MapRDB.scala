@@ -1,5 +1,6 @@
 package com.github.anicolaspp.spark.sql
 
+import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -19,6 +20,8 @@ object MapRDB {
 
 
   implicit class DataFrameOps(dataFrame: DataFrame) {
+
+    @DeveloperApi
     def joinWithMapRDBTable(maprdbTable: String, schema: StructType, left: String, right: String)(session: SparkSession): DataFrame = {
       import org.apache.spark.sql.functions._
       import org.ojai.store._

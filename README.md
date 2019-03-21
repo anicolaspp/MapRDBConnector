@@ -108,6 +108,29 @@ When writing to MapR Database, we can add transaction support to ensure that all
 This feature, has been introduced in `Experimental` mode so we can try it out and decide if it is worth having. 
 
 
+## JoinWithMapRDBTable
+
+`joinWithMapRDBTable` offers a way to join any `DataFrame`, no matter how it was constructed, with a MapR Database table. What separates this function from a regular `DataFrame.join` is that is tries to use secondary indexes when loading the MapR Database table based on the field being joint, so only those rows that are part of the joint table will be fetch from the MapR Database table. Also, it pushes down the columns specified on the `schema` so from those records that participate on the join it fetches only the columns that we required. This is a second optimization to reduce, even more, the amount of data being fetched.
+
+```scala
+
+val rdd = sparkSession.sparkContext.parallelize(1 to 1000000).map(n => Row(n.toString))
+
+val df = sparkSession.createDataFrame(rdd, new StructType().add("value", StringType))
+
+val joint = df.joinWithMapRDBTable(
+  "/user/mapr/tables/from_parquet", 
+  new StructType().add("payload", StringType), 
+  "value", 
+  "payload")(sparkSession)
+  
+joint.printSchema()
+
+root
+ |-- value: string (nullable = true)
+ |-- payload: string (nullable = true)
+```
+
 ## Related Blog Posts
 
 - [MapR-DB Spark Connector with Secondary Indexes](https://hackernoon.com/mapr-db-spark-connector-with-secondary-indexes-df41909f28ea)

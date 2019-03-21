@@ -3,7 +3,7 @@ package com.github.anicolaspp.spark
 
 import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
-import org.apache.spark.annotation.DeveloperApi
+import org.apache.spark.annotation.{DeveloperApi, Experimental}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -23,7 +23,7 @@ object MapRDB {
 
   implicit class DataFrameOps(dataFrame: DataFrame) {
 
-    @DeveloperApi
+    @Experimental
     def writeToMapRDB(path: String, withTransaction: Boolean = false): Unit =
       if (withTransaction) {
         dataFrame.write
@@ -35,7 +35,7 @@ object MapRDB {
       }
 
 
-    @DeveloperApi
+    @Experimental
     def joinWithMapRDBTable(maprdbTable: String,
                             schema: StructType,
                             left: String,
@@ -85,7 +85,7 @@ object MapRDB {
       dataFrame.join(rightDF, col(left) === col(right), joinType.toString)
     }
 
-    @DeveloperApi
+    @Experimental
     def joinWithMapRDBTable(maprdbTable: String,
                             schema: StructType,
                             left: String,

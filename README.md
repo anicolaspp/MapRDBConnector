@@ -110,7 +110,9 @@ This feature, has been introduced in `Experimental` mode so we can try it out an
 
 ## JoinWithMapRDBTable
 
-`joinWithMapRDBTable` offers a way to join any `DataFrame`, no matter how it was constructed, with a MapR Database table. What separates this function from a regular `DataFrame.join` is that is tries to use secondary indexes when loading the MapR Database table based on the field being joint, so only those rows that are part of the joint table will be fetch from the MapR Database table. Also, it pushes down the columns specified on the `schema` so from those records that participate on the join so it fetches only the columns we required. This is a second optimization to reduce the amount of data being fetched.
+`joinWithMapRDBTable` offers a way to join any `DataFrame`, no matter how it was constructed, with a MapR Database table. What separates this function from a regular `DataFrame.join` is that is tries to use secondary indexes when loading the MapR Database table based on the field being joint, so only those rows that are part of the joint table will be fetch from the MapR Database table. 
+
+This function pushes the projections specified on the `schema` down so it fetches only the columns we required. This is a second optimization to reduce the amount of data being fetched.
 
 ```scala
 

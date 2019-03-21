@@ -1,10 +1,14 @@
 package com.github.anicolaspp.spark.sql
 
+import java.util.function.Consumer
 import java.util.stream.Collectors
 
+import com.mapr.db.spark.MapRDBSpark
 import org.apache.spark.annotation.DeveloperApi
+import org.apache.spark.internal.Logging
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.ojai.DocumentReader
 
 
 object MapRDB {
@@ -21,10 +25,11 @@ object MapRDB {
   }
 
 
-  implicit class DataFrameOps(dataFrame: DataFrame) {
+  implicit class DataFrameOps(dataFrame: DataFrame) extends Logging {
 
     @DeveloperApi
     def joinWithMapRDBTable(maprdbTable: String, schema: StructType, left: String, right: String)(session: SparkSession): DataFrame = {
+
       import org.apache.spark.sql.functions._
       import org.ojai.store._
 
@@ -45,6 +50,7 @@ object MapRDB {
             List.empty.iterator
           } else {
 
+
             val leftValues = partition.map { row =>
               com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType)
             }
@@ -52,31 +58,40 @@ object MapRDB {
             val connection = DriverManager.getConnection("ojai:mapr:")
             val store = connection.getStore(maprdbTable)
 
-            val inCondition = connection
-              .newCondition()
-              .in(right, leftValues.toList)
-              .build()
-
-            println(inCondition.asJsonString())
-
-            val query = connection
-              .newQuery()
-              .where(inCondition)
-              .select(schema.fields.map(_.name): _*)
-              .build()
-
-            val result = store.find(query).asScala.foldLeft(List.empty[String]) { case (acc, doc) =>
-              doc.asJsonString() :: acc
-            }
+            val m = partition.map(row =>com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType) )
+              .grouped(10)
+              .map(v => connection.newCondition().in(right, v).build())
+              .map(cond => connection
+                .newQuery()
+                .where(cond)
+                .select(schema.fields.map(_.name): _*)
+                .build())
+              .flatMap(query => store.find(query).asScala.map(_.asJsonString()))
+            
+//
+//
+//            val inCondition = connection
+//              .newCondition()
+//              .in(right, leftValues.toList)
+//              .build()
+//
+//            println(inCondition.asJsonString())
+//
+//            val query = connection
+//              .newQuery()
+//              .where(inCondition)
+//              .select(schema.fields.map(_.name): _*)
+//              .build()
+//
+//            val result = store.find(query).asScala.map(_.asJsonString())
 
             store.close()
             connection.close()
 
-            result.iterator
+            m
           }
         }
 
-//      documents.take(10).foreach(println)
 
       import session.implicits._
 

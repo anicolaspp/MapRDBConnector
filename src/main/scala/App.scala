@@ -43,7 +43,7 @@ object App {
 
     println("INNER JOIN: ")
     inner_join.printSchema()
-    inner_join.show(10)
+    println(inner_join.count)
 
     val left_join = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
       new StructType().add("_id", StringType).add("payload", StringType),
@@ -53,7 +53,7 @@ object App {
 
     println("LEFT JOIN: ")
     left_join.printSchema()
-    left_join.show(10)
+    println(left_join.count)
 
 
     val left_outer = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
@@ -64,7 +64,7 @@ object App {
 
     println("LEFT OUTER JOIN: ")
     left_outer.printSchema()
-    left_outer.show(10)
+    println(left_outer.count)
 
     val outer = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
       new StructType().add("_id", StringType).add("payload", StringType),
@@ -74,16 +74,6 @@ object App {
 
     println("OUTER JOIN: ")
     outer.printSchema()
-    outer.show(10)
-
-    val cross = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
-      new StructType().add("_id", StringType).add("payload", StringType),
-      "value",
-      "payload",
-      JoinType.cross)(sparkSession)
-
-    println("CROSS JOIN: ")
-    cross.printSchema()
-    cross.show(10)
+    println(outer.count)
   }
 }

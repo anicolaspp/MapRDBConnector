@@ -9,14 +9,10 @@ object JoinType {
     case idx => joins(idx)
   }
 
-  private lazy val joins = List(inner, cross, outer, full, left, left_outer)
+  private lazy val joins = List(inner, outer, full, left, left_outer)
 
   case object inner extends JoinType {
     override def toString: String = "inner"
-  }
-
-  case object cross extends JoinType {
-    override def toString: String = "cross"
   }
 
   case object outer extends JoinType {

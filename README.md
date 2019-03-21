@@ -101,7 +101,7 @@ In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the 
 
 ## Transaction Support
 
-When writing to MapR Database, we can add transaction support to ensure that all data is written or none does. In reality, this is a best effort since the problem is quite complicated. Read the following link to find out more about this is implemented, uses cases, and what to expect. 
+When writing to MapR Database, we can add transaction support to ensure that all data is written or none does. In reality, this is a best effort since the problem is quite complicated. Read the following link to find out more about how this is implemented, uses cases, and what to expect. 
 
 [Transaction Support](https://github.com/anicolaspp/MapRDBConnector/blob/master/Adding%20Transaction%20Support%20to%20MapR-DB.md)
 

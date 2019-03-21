@@ -40,7 +40,6 @@ object MapRDB {
         .cache()
         .select(left)
         .distinct()
-        .repartition(200)
 
       val documents = queryToRight
         .rdd

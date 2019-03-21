@@ -9,21 +9,21 @@ The main idea behind implementing a new **MapR-DB Connector for Apache Spark** i
 <dependency>
   <groupId>com.github.anicolaspp</groupId>
   <artifactId>maprdbconnector_2.11</artifactId>
-  <version>1.0.3</version>
+  <version>X.Y.Z</version>
 </dependency>
 ```
 
 ```
-libraryDependencies += "com.github.anicolaspp" % "maprdbconnector_2.11" % "1.0.3"
+libraryDependencies += "com.github.anicolaspp" % "maprdbconnector_2.11" % "X.Y.Z"
 ```
 
 ## MapR-DB Secondary Indexes
 
 MapR-DB automatically indexes the field `_id` and we can manually add many more indexes that can help to speed up queries that use the defined indexes. **Apache Drill**, for instance, makes use of the defined indexes for the tables being queried so the underlying computations are greatly speeded up. 
 
-When using **Apache Spark** we are expecting that the same as in **Apache Drill** applies. However, The official **MapR-DB Connector for Apache Spark** does not use the secondary indexes defined on the tables. The official connector implements filters and projections push down to reduce the amount of data being transfer beetwen **MapR-DB** and **Apache Spark**, still, secondary indexes are just not used. 
+When using **Apache Spark** we are expecting that the same as in **Apache Drill** applies. However, The official **MapR-DB Connector for Apache Spark** does not use the secondary indexes defined on the tables. The official connector implements filters and projections push down to reduce the amount of data being transfer between **MapR-DB** and **Apache Spark**, still, secondary indexes are just not used. 
 
-Our implementation mimics the same API as the official connector. It also supports filters and projections push down and *it adds the ability to use secondary indexes* if appropiated.
+Our implementation mimics the same API as the official connector. It also supports filters and projections push down and *it adds the ability to use secondary indexes* if appropriated.
 
 ## Using Our MapRDBConnector
 
@@ -41,7 +41,7 @@ val schema = StructType(Seq(StructField("_id", StringType), StructField("first_n
       .show()
 ```      
 
-When running the code above, our **MapRDBConnector** uses the corresponding MapR-DB secondary index. We can examine the output of the underlyign OJAI object to make sure that, in fact, it uses the secondary index. Notice the `"indexName":"uid_idx"` which indicates that the index `uid` is being used when running the query. 
+When running the code above, our **MapRDBConnector** uses the corresponding MapR-DB secondary index. We can examine the output of the underlying OJAI object to make sure that, in fact, it uses the secondary index. Notice the `"indexName":"uid_idx"` which indicates that the index `uid` is being used when running the query. 
 
 
 ```json
@@ -95,9 +95,43 @@ In the same way we can push filters down to MapR-DB. It is import to notice (our
 
 ## Reading Parallelism and Data Locality
 
-Our **MapRDBConnector** is able to read the Table information (thanks to @iulianov) and it lauches a task for each Table region.
+Our **MapRDBConnector** is able to read the Table information and it launches a task for each Table region.
 
-In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the reading task as close as possible to where the corresponding Table region lives in the cluster. In other words, if `region 1` lives in node `10.20.30.40`, our library passes this information to Spark so that when Spark launches the reading task for `region 1` it puts it on an executor running on the same node `10.20.30.40`. This is up to Spark and the resources availability, but we provide all information Spark needs to sucessfully maintain data locatily. 
+In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the reading task as close as possible to where the corresponding Table region lives in the cluster. In other words, if `region 1` lives in node `10.20.30.40`, our library passes this information to Spark so that when Spark launches the reading task for `region 1` it puts it on an executor running on the same node `10.20.30.40`. This is up to Spark and the resources availability, but we provide all information Spark needs to successfully maintain data locality. 
+
+## Transaction Support
+
+When writing to MapR Database, we can add transaction support to ensure that all data is written or none does. In reality, this is a best effort since the problem is quite complicated. Read the following link to find out more about how this is implemented, uses cases, and what to expect. 
+
+[Transaction Support](https://github.com/anicolaspp/MapRDBConnector/blob/master/Adding%20Transaction%20Support%20to%20MapR-DB.md)
+
+This feature, has been introduced in `Experimental` mode so we can try it out and decide if it is worth having. 
+
+
+## JoinWithMapRDBTable
+
+`joinWithMapRDBTable` offers a way to join any `DataFrame`, no matter how it was constructed, with a MapR Database table. What separates this function from a regular `DataFrame.join` is that is tries to use secondary indexes when loading the MapR Database table based on the field being joint, so only those rows that are part of the joint table will be fetch from the MapR Database table. 
+
+This function pushes the projections specified on the `schema` down so it fetches only the columns we required. This is a second optimization to reduce the amount of data being fetched.
+
+```scala
+
+val rdd = sparkSession.sparkContext.parallelize(1 to 1000000).map(n => Row(n.toString))
+
+val df = sparkSession.createDataFrame(rdd, new StructType().add("value", StringType))
+
+val joint = df.joinWithMapRDBTable(
+  "/user/mapr/tables/from_parquet", 
+  new StructType().add("payload", StringType), 
+  "value", 
+  "payload")(sparkSession)
+  
+joint.printSchema()
+
+root
+ |-- value: string (nullable = true)
+ |-- payload: string (nullable = true)
+```
 
 ## Related Blog Posts
 
@@ -107,6 +141,6 @@ In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the 
 
 ## Speed Comparison
 
-In the image below, RED is the official connector, BLUE ours. Less is better since it meassures the execution time of the query. 
+In the image below, RED is the official connector, BLUE ours. Less is better since it measures the execution time of the query. 
 
 ![](https://github.com/anicolaspp/MapRDBConnector/blob/master/Running%20Time.png)

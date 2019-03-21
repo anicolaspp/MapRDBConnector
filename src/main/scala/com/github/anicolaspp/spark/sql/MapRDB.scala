@@ -67,23 +67,6 @@ object MapRDB {
                 .select(schema.fields.map(_.name): _*)
                 .build())
               .flatMap(query => store.find(query).asScala.map(_.asJsonString()))
-            
-//
-//
-//            val inCondition = connection
-//              .newCondition()
-//              .in(right, leftValues.toList)
-//              .build()
-//
-//            println(inCondition.asJsonString())
-//
-//            val query = connection
-//              .newQuery()
-//              .where(inCondition)
-//              .select(schema.fields.map(_.name): _*)
-//              .build()
-//
-//            val result = store.find(query).asScala.map(_.asJsonString())
 
             store.close()
             connection.close()
@@ -91,8 +74,7 @@ object MapRDB {
             m
           }
         }
-
-
+      
       import session.implicits._
 
       val rightDF = session.read.schema(schema).json(documents.toDS)

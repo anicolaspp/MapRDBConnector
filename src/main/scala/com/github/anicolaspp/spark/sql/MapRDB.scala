@@ -55,7 +55,6 @@ object MapRDB {
 
             partition
               .map(row => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType))
-              //              .grouped(20)
               .map(v => connection.newCondition().in(right, List(v)).build())
               .map(cond => connection
                 .newQuery()

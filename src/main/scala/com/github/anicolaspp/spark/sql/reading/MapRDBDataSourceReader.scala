@@ -1,8 +1,9 @@
-package com.github.anicolaspp.spark.sql
+package com.github.anicolaspp.spark.sql.reading
 
 import java.sql.Timestamp
 import java.util
 
+import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._

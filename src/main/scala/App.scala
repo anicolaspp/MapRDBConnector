@@ -8,7 +8,7 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructT
 // ONLY for testing
 object App {
 
-  import com.github.anicolaspp.spark.sql.MapRDB._
+  import com.github.anicolaspp.spark.MapRDB._
 
   def main(args: Array[String]): Unit = {
 
@@ -45,6 +45,7 @@ object App {
     val df = sparkSession.createDataFrame(rdd, new StructType().add("value", StringType))
 
     val joint = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet", new StructType().add("payload", StringType), "value", "payload")(sparkSession)
+
 
     joint.printSchema()
     joint.show(10)

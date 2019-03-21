@@ -40,6 +40,7 @@ object MapRDB {
         .cache()
         .select(left)
         .distinct()
+        .repartition(200)
 
       val documents = queryToRight
         .rdd
@@ -52,23 +53,19 @@ object MapRDB {
             val connection = DriverManager.getConnection("ojai:mapr:")
             val store = connection.getStore(maprdbTable)
 
-            val m = partition.map(row =>com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType) )
-              .grouped(10)
-              .map(v => connection.newCondition().in(right, v).build())
+            partition
+              .map(row => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType))
+              //              .grouped(20)
+              .map(v => connection.newCondition().in(right, List(v)).build())
               .map(cond => connection
                 .newQuery()
                 .where(cond)
                 .select(schema.fields.map(_.name): _*)
                 .build())
               .flatMap(query => store.find(query).asScala.map(_.asJsonString()))
-
-            store.close()
-            connection.close()
-
-            m
           }
         }
-      
+
       import session.implicits._
 
       val rightDF = session.read.schema(schema).json(documents.toDS)

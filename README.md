@@ -99,7 +99,7 @@ Our **MapRDBConnector** is able to read the Table information (thanks to @iulian
 
 In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the reading task as close as possible to where the corresponding Table region lives in the cluster. In other words, if `region 1` lives in node `10.20.30.40`, our library passes this information to Spark so that when Spark launches the reading task for `region 1` it puts it on an executor running on the same node `10.20.30.40`. This is up to Spark and the resources availability, but we provide all information Spark needs to sucessfully maintain data locatily. 
 
-## [Transaction Support](Adding Transaction Support to MapR-DB.md)
+## [Transaction Support](https://github.com/anicolaspp/MapRDBConnector/blob/master/Adding%20Transaction%20Support%20to%20MapR-DB.md)
 
 
 ## Related Blog Posts

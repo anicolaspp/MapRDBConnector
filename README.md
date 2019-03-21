@@ -95,7 +95,7 @@ In the same way we can push filters down to MapR-DB. It is import to notice (our
 
 ## Reading Parallelism and Data Locality
 
-Our **MapRDBConnector** is able to read the Table information (thanks to @iulianov) and it launches a task for each Table region.
+Our **MapRDBConnector** is able to read the Table information and it launches a task for each Table region.
 
 In addition to this, our **MapRDBConnector** hints Spark so that Spark puts the reading task as close as possible to where the corresponding Table region lives in the cluster. In other words, if `region 1` lives in node `10.20.30.40`, our library passes this information to Spark so that when Spark launches the reading task for `region 1` it puts it on an executor running on the same node `10.20.30.40`. This is up to Spark and the resources availability, but we provide all information Spark needs to successfully maintain data locality. 
 
@@ -110,7 +110,7 @@ This feature, has been introduced in `Experimental` mode so we can try it out an
 
 ## JoinWithMapRDBTable
 
-`joinWithMapRDBTable` offers a way to join any `DataFrame`, no matter how it was constructed, with a MapR Database table. What separates this function from a regular `DataFrame.join` is that is tries to use secondary indexes when loading the MapR Database table based on the field being joint, so only those rows that are part of the joint table will be fetch from the MapR Database table. Also, it pushes down the columns specified on the `schema` so from those records that participate on the join it fetches only the columns that we required. This is a second optimization to reduce, even more, the amount of data being fetched.
+`joinWithMapRDBTable` offers a way to join any `DataFrame`, no matter how it was constructed, with a MapR Database table. What separates this function from a regular `DataFrame.join` is that is tries to use secondary indexes when loading the MapR Database table based on the field being joint, so only those rows that are part of the joint table will be fetch from the MapR Database table. Also, it pushes down the columns specified on the `schema` so from those records that participate on the join so it fetches only the columns we required. This is a second optimization to reduce the amount of data being fetched.
 
 ```scala
 

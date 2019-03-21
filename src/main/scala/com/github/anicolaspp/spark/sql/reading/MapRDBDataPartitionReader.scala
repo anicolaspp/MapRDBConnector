@@ -43,15 +43,18 @@ class MapRDBDataPartitionReader(table: String,
 
   private def query: Query = {
 
-    val sparkFiltersQueryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
+    val finalQueryConditionString = if (filters.nonEmpty) {
+      val sparkFiltersQueryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
 
-    val finalQueryConditionString = QueryConditionBuilder.addTabletInfo(tabletInfo.queryJson, sparkFiltersQueryCondition)
+      QueryConditionBuilder.addTabletInfo(tabletInfo.queryJson, sparkFiltersQueryCondition)
+    } else {
+      tabletInfo.queryJson
+    }
 
     log.debug(s"USING QUERY STRING: $finalQueryConditionString")
 
-
     log.debug(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
-    
+
     val query = connection
       .newQuery()
       .where(finalQueryConditionString)

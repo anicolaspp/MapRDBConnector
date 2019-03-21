@@ -4,7 +4,6 @@ import java.sql.Timestamp
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources._
-import org.apache.spark.sql.types.Decimal
 import org.ojai.store.{Connection, QueryCondition}
 import org.ojai.types.OTimestamp
 
@@ -12,13 +11,15 @@ object QueryConditionBuilder extends Logging {
 
   import collection.JavaConversions._
 
-  def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): QueryCondition = createFilterCondition(filters)
+//  def empty(implicit connection: Connection) = connection.newCondition().build().asJsonString()
 
-  def addTabletInfo(queryJson: String, queryCondition: QueryCondition): String =
+  def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): String = createFilterCondition(filters).asJsonString()
+
+  def addTabletInfo(queryJson: String, queryCondition: String): String =
     if (queryJson == "{}") {
-      queryCondition.asJsonString
+      queryCondition
     } else {
-      "{\"$and\":[" + queryJson + "," + queryCondition.asJsonString + "]}"
+      "{\"$and\":[" + queryJson + "," + queryCondition + "]}"
     }
 
   /**

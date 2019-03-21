@@ -1,6 +1,7 @@
 package com.github.anicolaspp.spark
 
 
+import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.sql.types.StructType
@@ -33,10 +34,13 @@ object MapRDB {
         MapRSpark.save(dataFrame, path, "_id", false, false)
       }
 
-    @DeveloperApi
-    def joinWithMapRDBTable(maprdbTable: String, schema: StructType, left: String, right: String)(session: SparkSession): DataFrame = {
 
-      import org.apache.spark.sql.functions._
+    @DeveloperApi
+    def joinWithMapRDBTable(maprdbTable: String,
+                            schema: StructType,
+                            left: String,
+                            right: String,
+                            joinType: JoinType)(implicit session: SparkSession): DataFrame = {
       import org.ojai.store._
 
       import collection.JavaConversions._
@@ -62,21 +66,31 @@ object MapRDB {
             partition
               .map(row => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType))
               .map(v => connection.newCondition().in(right, List(v)).build())
-              .map(cond => connection
-                .newQuery()
-                .where(cond)
-                .select(schema.fields.map(_.name): _*)
-                .build())
+              .map { cond =>
+                connection
+                  .newQuery()
+                  .where(cond)
+                  .select(schema.fields.map(_.name): _*)
+                  .build()
+              }
               .flatMap(query => store.find(query).asScala.map(_.asJsonString()))
           }
         }
 
+      import org.apache.spark.sql.functions._
       import session.implicits._
 
       val rightDF = session.read.schema(schema).json(documents.toDS)
 
-      dataFrame.join(rightDF, col(left) === col(right))
+      dataFrame.join(rightDF, col(left) === col(right), joinType.toString)
     }
+
+    @DeveloperApi
+    def joinWithMapRDBTable(maprdbTable: String,
+                            schema: StructType,
+                            left: String,
+                            right: String)(implicit session: SparkSession): DataFrame =
+      joinWithMapRDBTable(maprdbTable, schema, left, right, JoinType.inner)
   }
 
 }

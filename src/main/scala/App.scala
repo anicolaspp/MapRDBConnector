@@ -1,5 +1,6 @@
 package com.github.anicolaspp
 
+import com.github.anicolaspp.spark.sql.reading.JoinType
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
@@ -27,16 +28,62 @@ object App {
     println("HERE")
 
 
-    val rdd = sparkSession.sparkContext.parallelize(1 to 1000000).map(n => Row(n.toString))
+      val rdd = sparkSession.sparkContext.parallelize(1 to 1000000).map(n => Row(n.toString))
       .union(sparkSession.sparkContext.parallelize(List(Row("67-34859-102-69068124-28-931853-80564775-5573-4-552141-1162559-508125-8114-59-498052941-123-7085126119-8020-460105-36-56-126-3067-338569-14116-120102731011680117-47-8778-48-1121074158-47-111-4868424292971077-105120-1711-404-6-5696-11445052-6664-54-11739"))))
 
 
     val df = sparkSession.createDataFrame(rdd, new StructType().add("value", StringType))
 
-    val joint = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet", new StructType().add("payload", StringType), "value", "payload")(sparkSession)
+    val inner_join = df.joinWithMapRDBTable(
+      "/user/mapr/tables/from_parquet",
+      new StructType().add("_id", StringType).add("payload", StringType),
+      "value",
+      "payload")(sparkSession)
 
 
-    joint.printSchema()
-    joint.show(10)
+    println("INNER JOIN: ")
+    inner_join.printSchema()
+    inner_join.show(10)
+
+    val left_join = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
+      new StructType().add("_id", StringType).add("payload", StringType),
+      "value",
+      "payload",
+      JoinType.left)(sparkSession)
+
+    println("LEFT JOIN: ")
+    left_join.printSchema()
+    left_join.show(10)
+
+
+    val left_outer = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
+      new StructType().add("_id", StringType).add("payload", StringType),
+      "value",
+      "payload",
+      JoinType.left_outer)(sparkSession)
+
+    println("LEFT OUTER JOIN: ")
+    left_outer.printSchema()
+    left_outer.show(10)
+
+    val outer = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
+      new StructType().add("_id", StringType).add("payload", StringType),
+      "value",
+      "payload",
+      JoinType.outer)(sparkSession)
+
+    println("OUTER JOIN: ")
+    outer.printSchema()
+    outer.show(10)
+
+    val cross = df.joinWithMapRDBTable("/user/mapr/tables/from_parquet",
+      new StructType().add("_id", StringType).add("payload", StringType),
+      "value",
+      "payload",
+      JoinType.cross)(sparkSession)
+
+    println("CROSS JOIN: ")
+    cross.printSchema()
+    cross.show(10)
   }
 }

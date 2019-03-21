@@ -1,5 +1,7 @@
-package com.github.anicolaspp.spark.sql
+package com.github.anicolaspp.spark.sql.reading
 
+import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
+import com.mapr.db.spark.MapRDBSpark
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
@@ -21,6 +23,7 @@ class MapRDBDataPartitionReader(table: String,
                                 hintedIndexes: List[String])
   extends DataReaderFactory[Row] with Logging {
 
+  import com.mapr.db.spark.sql.utils.MapRSqlUtils._
   import org.ojai.store._
 
   import scala.collection.JavaConverters._
@@ -70,11 +73,8 @@ class MapRDBDataPartitionReader(table: String,
 
       log.debug(document.asJsonString())
 
-      val values = schema.fields
-        .foldLeft(List.empty[Any])((xs, field) => ParsableDocument.ParsableDocument(document).get(field) :: xs)
-        .reverse
 
-      Row.fromSeq(values)
+      documentToRow(MapRDBSpark.newDocument(document), schema)
     }
 
     override def close(): Unit = {

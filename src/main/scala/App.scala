@@ -7,7 +7,7 @@ import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructT
 // ONLY for testing
 object App {
 
-  import com.github.anicolaspp.spark.sql.MapRDB._
+  import com.github.anicolaspp.spark.MapRDB._
 
   def main(args: Array[String]): Unit = {
 
@@ -37,6 +37,12 @@ object App {
     println(s"MY SCHEMA: ${data.schema}")
 
     data.show()
+
+
+
+    data.writeToMapRDB("/user/mapr/tables/my_table", withTransaction = true)
+
+
     
 //    sparkSession
 //      .loadFromMapRDB("/user/mapr/tables/data", schema)

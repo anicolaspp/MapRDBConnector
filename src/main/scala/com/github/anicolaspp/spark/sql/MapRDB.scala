@@ -50,11 +50,6 @@ object MapRDB {
             List.empty.iterator
           } else {
 
-
-            val leftValues = partition.map { row =>
-              com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType)
-            }
-
             val connection = DriverManager.getConnection("ojai:mapr:")
             val store = connection.getStore(maprdbTable)
 

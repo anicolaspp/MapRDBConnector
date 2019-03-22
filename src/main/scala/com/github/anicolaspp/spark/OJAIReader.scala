@@ -15,7 +15,10 @@ trait OJAIReader {
 object OJAIReader {
 
   @DeveloperApi
-  def defaultPartitionReader: OJAIReader = PartitionQueryRunner
+  def groupedPartitionReader(batchSize: Int = 20): OJAIReader = new GroupedPartitionQueryRunner(batchSize)
+
+  @DeveloperApi
+  def sequentialPartitionReader: OJAIReader = new GroupedPartitionQueryRunner(1)
 
   /**
     * Used to project the exact column we need to filter the MapR-DB table. We can use Cell instead of passing the

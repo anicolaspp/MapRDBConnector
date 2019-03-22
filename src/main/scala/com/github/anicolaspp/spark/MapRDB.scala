@@ -65,7 +65,7 @@ object MapRDB {
               .map(row => Cell(row.get(0), columnDataType))
               .toIterator
 
-            OJAIReader.defaultPartitionReader.readFrom(partitionCellIterator, table, schema, right)
+            OJAIReader.groupedPartitionReader().readFrom(partitionCellIterator, table, schema, right)
           }
         }
 

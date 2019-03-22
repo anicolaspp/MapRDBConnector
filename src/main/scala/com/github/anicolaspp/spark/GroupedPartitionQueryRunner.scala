@@ -8,7 +8,7 @@ import org.apache.spark.sql.types.StructType
   *
   * Each Spark executor has an instance of PartitionQueryRunner.
   */
-private[spark] object PartitionQueryRunner extends OJAIReader {
+private[spark] class GroupedPartitionQueryRunner(querySize: Int) extends OJAIReader {
 
   import com.github.anicolaspp.concurrent.ConcurrentContext.Implicits._
   import org.ojai.store._
@@ -35,7 +35,7 @@ private[spark] object PartitionQueryRunner extends OJAIReader {
 
     val parallelRunningQueries = partition
       .map(cell => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(cell.value, cell.dataType))
-      .grouped(20)
+      .grouped(querySize)
       .map(group => connection.newCondition().in(right, group).build())
       .map { cond =>
         connection

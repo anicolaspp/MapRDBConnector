@@ -8,7 +8,7 @@ import org.apache.spark.sql.types.StructType
   *
   * Each Spark executor has an instance of PartitionQueryRunner.
   */
-private[spark] class GroupedPartitionQueryRunner(querySize: Int) extends OJAIReader {
+private[ojai] class GroupedPartitionQueryRunner(querySize: Int) extends OJAIReader {
 
   import com.github.anicolaspp.concurrent.ConcurrentContext.Implicits._
   import org.ojai.store._

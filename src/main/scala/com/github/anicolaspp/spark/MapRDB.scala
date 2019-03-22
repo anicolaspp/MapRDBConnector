@@ -1,6 +1,7 @@
 package com.github.anicolaspp.spark
 
-import com.github.anicolaspp.concurrent.ConcurrentContext.Implicits._
+
+import com.github.anicolaspp.spark.OJAIReader.Cell
 import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
 import org.apache.spark.annotation.Experimental
@@ -42,10 +43,7 @@ object MapRDB {
                             left: String,
                             right: String,
                             joinType: JoinType)(implicit session: SparkSession): DataFrame = {
-      import org.ojai.store._
 
-      import collection.JavaConversions._
-      import scala.collection.JavaConverters._
 
       val queryToRight = dataFrame
         .select(left)
@@ -57,27 +55,17 @@ object MapRDB {
       val documents = queryToRight
         .rdd
         .mapPartitions { partition =>
-
           if (partition.isEmpty) {
             List.empty.iterator
           } else {
 
-            val connection = DriverManager.getConnection("ojai:mapr:")
-            val store = connection.getStore(table)
+            val partitionCellIterator = partition
+              .toIterable
+              .par
+              .map(row => Cell(row.get(0), columnDataType))
+              .toIterator
 
-            val parallelRunningQueries = partition
-              .map(row => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), columnDataType))
-              .map(v => connection.newCondition().in(right, List(v)).build())
-              .map { cond =>
-                connection
-                  .newQuery()
-                  .where(cond)
-                  .select(schema.fields.map(_.name): _*)
-                  .build()
-              }
-              .map(query => store.find(query).asScala.map(_.asJsonString()).async)
-
-            parallelRunningQueries.awaitSliding().flatten
+            OJAIReader.defaultPartitionReader.readFrom(partitionCellIterator, table, schema, right)
           }
         }
 
@@ -98,3 +86,4 @@ object MapRDB {
   }
 
 }
+

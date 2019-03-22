@@ -7,6 +7,8 @@ import org.apache.spark.annotation.{DeveloperApi, Experimental}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+import scala.concurrent.{Await, Future}
+
 object MapRDB {
 
   implicit class ExtendedSession(sparkSession: SparkSession) {
@@ -52,18 +54,20 @@ object MapRDB {
         .distinct()
         .repartition(200)
 
+      import scala.concurrent.ExecutionContext.Implicits.global
+
       val documents = queryToRight
         .rdd
         .mapPartitions { partition =>
 
           if (partition.isEmpty) {
-            List.empty.iterator
+             List.empty.iterator
           } else {
 
             val connection = DriverManager.getConnection("ojai:mapr:")
             val store = connection.getStore(maprdbTable)
 
-            partition
+            val parallelRunningQueries = partition
               .map(row => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), schema.fields(schema.fieldIndex(right)).dataType))
               .map(v => connection.newCondition().in(right, List(v)).build())
               .map { cond =>
@@ -73,9 +77,16 @@ object MapRDB {
                   .select(schema.fields.map(_.name): _*)
                   .build()
               }
-              .flatMap(query => store.find(query).asScala.map(_.asJsonString()))
+              .map(query => Future { store.find(query).asScala.map(_.asJsonString()) })
+
+            val aggregatedRunningResult = Future.fold(parallelRunningQueries)(List.empty[String])((a, b) => a ++ b.toList)
+
+            import scala.concurrent.duration.Duration._
+
+            Await.result(aggregatedRunningResult, Inf).iterator
           }
         }
+
 
       import org.apache.spark.sql.functions._
       import session.implicits._

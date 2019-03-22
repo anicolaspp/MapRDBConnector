@@ -10,7 +10,7 @@ import org.apache.spark.storage.StorageLevel
 
 object MapRDB {
 
-  implicit class ExtendedSession(sparkSession: SparkSession) {
+  implicit class SessionOps(sparkSession: SparkSession) {
 
     def loadFromMapRDB(path: String, schema: StructType): DataFrame = {
       sparkSession

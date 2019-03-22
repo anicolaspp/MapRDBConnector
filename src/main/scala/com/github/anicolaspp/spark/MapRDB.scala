@@ -1,14 +1,12 @@
 package com.github.anicolaspp.spark
 
-
+import com.github.anicolaspp.concurrent.ConcurrentContext.Implicits._
 import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
 import org.apache.spark.annotation.Experimental
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
-
-import scala.concurrent.{Await, Future}
 
 object MapRDB {
 
@@ -39,7 +37,7 @@ object MapRDB {
 
 
     @Experimental
-    def joinWithMapRDBTable(maprdbTable: String,
+    def joinWithMapRDBTable(table: String,
                             schema: StructType,
                             left: String,
                             right: String,
@@ -48,12 +46,11 @@ object MapRDB {
 
       import collection.JavaConversions._
       import scala.collection.JavaConverters._
-      import scala.concurrent.ExecutionContext.Implicits.global
 
       val queryToRight = dataFrame
-      .select(left)
-      .distinct()
-      .persist(StorageLevel.MEMORY_ONLY_2)
+        .select(left)
+        .distinct()
+        .persist(StorageLevel.MEMORY_ONLY_2)
 
       val columnDataType = schema.fields(schema.fieldIndex(right)).dataType
 
@@ -66,7 +63,7 @@ object MapRDB {
           } else {
 
             val connection = DriverManager.getConnection("ojai:mapr:")
-            val store = connection.getStore(maprdbTable)
+            val store = connection.getStore(table)
 
             val parallelRunningQueries = partition
               .map(row => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(row.get(0), columnDataType))
@@ -78,14 +75,12 @@ object MapRDB {
                   .select(schema.fields.map(_.name): _*)
                   .build()
               }
-              .map(query => Future { store.find(query).asScala.map(_.asJsonString()) })
+              .map(query => store.find(query).asScala.map(_.asJsonString()).async)
 
-            val aggregatedRunningResult = Future.fold(parallelRunningQueries)(List.empty[String])(_ ++ _.toList)
-            
-            Await.result(aggregatedRunningResult, scala.concurrent.duration.Duration.Inf).iterator
+            parallelRunningQueries.awaitSliding().flatten
           }
         }
-      
+
       import org.apache.spark.sql.functions._
       import session.implicits._
 
@@ -103,3 +98,11 @@ object MapRDB {
   }
 
 }
+
+
+
+
+
+
+
+

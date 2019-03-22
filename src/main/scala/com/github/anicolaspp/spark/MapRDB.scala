@@ -1,7 +1,8 @@
 package com.github.anicolaspp.spark
 
 
-import com.github.anicolaspp.spark.OJAIReader.Cell
+import com.github.anicolaspp.ojai.OJAIReader
+import com.github.anicolaspp.ojai.OJAIReader.Cell
 import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
 import org.apache.spark.annotation.Experimental

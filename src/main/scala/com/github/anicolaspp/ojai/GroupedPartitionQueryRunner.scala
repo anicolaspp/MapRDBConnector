@@ -1,6 +1,6 @@
-package com.github.anicolaspp.spark
+package com.github.anicolaspp.ojai
 
-import com.github.anicolaspp.spark.OJAIReader._
+import com.github.anicolaspp.ojai.OJAIReader.Cell
 import org.apache.spark.sql.types.StructType
 
 /**
@@ -37,13 +37,13 @@ private[spark] class GroupedPartitionQueryRunner(querySize: Int) extends OJAIRea
       .map(cell => com.mapr.db.spark.sql.utils.MapRSqlUtils.convertToDataType(cell.value, cell.dataType))
       .grouped(querySize)
       .map(group => connection.newCondition().in(right, group).build())
-      .map { cond =>
+      .map(cond =>
         connection
           .newQuery()
           .where(cond) // Filters push down. Secondary indexes kick in here.
           .select(schema.fields.map(_.name): _*) // Projections push down.
           .build()
-      }
+      )
       .map(query => store.find(query).asScala.map(_.asJsonString()).async)
 
     parallelRunningQueries.awaitSliding().flatten

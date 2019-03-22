@@ -1,6 +1,6 @@
-package com.github.anicolaspp.spark
+package com.github.anicolaspp.ojai
 
-import com.github.anicolaspp.spark.OJAIReader.Cell
+import com.github.anicolaspp.ojai.OJAIReader.Cell
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.sql.types.{DataType, StructType}
 
@@ -27,6 +27,6 @@ object OJAIReader {
     * @param value    Spark value of the Row at the specific column.
     * @param dataType The corresponding data type
     */
-  case class Cell(value: Any, dataType: DataType)
+  private[anicolaspp] case class Cell(value: Any, dataType: DataType)
 
 }

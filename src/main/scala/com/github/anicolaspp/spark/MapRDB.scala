@@ -43,30 +43,23 @@ object MapRDB {
                             schema: StructType,
                             left: String,
                             right: String,
-                            joinType: JoinType)(implicit session: SparkSession): DataFrame = {
-
-
-      val queryToRight = dataFrame
-        .select(left)
-        .distinct()
-//        .persist(StorageLevel.MEMORY_ONLY_2)
+                            joinType: JoinType,
+                            concurrentQueries: Int = 20)(implicit session: SparkSession): DataFrame = {
 
       val columnDataType = schema.fields(schema.fieldIndex(right)).dataType
 
-      val documents = queryToRight
+      val documents = dataFrame
+        .select(left)
+        .distinct()
         .rdd
         .mapPartitions { partition =>
           if (partition.isEmpty) {
             List.empty.iterator
           } else {
 
-            val partitionCellIterator = partition
-              .toIterable
-              .par
-              .map(row => Cell(row.get(0), columnDataType))
-              .toIterator
+            val partitionCellIterator = partition.map(row => Cell(row.get(0), columnDataType))
 
-            OJAIReader.groupedPartitionReader().readFrom(partitionCellIterator, table, schema, right)
+            OJAIReader.groupedPartitionReader(concurrentQueries).readFrom(partitionCellIterator, table, schema, right)
           }
         }
 

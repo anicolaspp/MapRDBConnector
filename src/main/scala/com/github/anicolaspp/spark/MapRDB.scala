@@ -49,7 +49,7 @@ object MapRDB {
       val queryToRight = dataFrame
         .select(left)
         .distinct()
-        .persist(StorageLevel.MEMORY_ONLY_2)
+//        .persist(StorageLevel.MEMORY_ONLY_2)
 
       val columnDataType = schema.fields(schema.fieldIndex(right)).dataType
 

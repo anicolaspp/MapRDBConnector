@@ -1,6 +1,7 @@
 package com.github.anicolaspp.concurrent
 
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration.Inf
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * TaskLevelConcurrentContext is used to control a multithreaded context within a Spark Task.
@@ -14,7 +15,7 @@ trait ConcurrentContext {
     * @tparam A Result type of the passed in block.
     * @return A concurrent task, that is a Future[A].
     */
-  def async[A](task: => A): Future[A]
+  def async[A](task: => A): Future[A] = Future(task)(ec)
 
   /**
     * Awaits for multiple concurrent tasks using a sliding windows so we don't have to hold all task results in memory
@@ -25,15 +26,33 @@ trait ConcurrentContext {
     * @tparam A Result type of each concurrent task.
     * @return An iterator that contains the result of executing each concurrent task.
     */
-  def awaitSliding[A](it: Iterator[Future[A]], batchSize: Int = 20): Iterator[A]
+  def awaitSliding[A](it: Iterator[Future[A]], batchSize: Int = 20): Iterator[A] = {
+
+    implicit val context: ExecutionContext = ec
+
+    val slidingIterator = it.sliding(batchSize - 1).withPartial(true)
+
+    val (head, tail) = slidingIterator.span(_ => slidingIterator.hasNext)
+
+    head.map(batchOfFuture => Await.result(batchOfFuture.head, Inf)) ++
+      tail.flatMap(batchOfFuture => Await.result(Future.sequence(batchOfFuture), Inf))
+  }
+
+  /**
+    * We allow implementations to define the ExecutionContext to be used.
+    *
+    * @return ExecutionContext to be used when spawning new threads.
+    */
+  def ec: ExecutionContext
 }
 
 object ConcurrentContext {
   /**
     * Implicit instance to our TaskLevelConcurrentContext since it is our default one.
     */
-  implicit val defaultConcurrentContext: ConcurrentContext = TaskLevelConcurrentContext
+  implicit val defaultConcurrentContext: ConcurrentContext = BoundedConcurrentContext
 
+  def unboundedConcurrentContext: ConcurrentContext = UnboundedConcurrentContext
 
   /**
     * Implicit syntax
@@ -46,8 +65,7 @@ object ConcurrentContext {
     }
 
     implicit class AsyncOps[A](task: => A) {
-      def async(implicit concurrentContext: ConcurrentContext): Future[A] =
-        concurrentContext.async(task)
+      def async(implicit concurrentContext: ConcurrentContext): Future[A] = concurrentContext.async(task)
     }
 
   }

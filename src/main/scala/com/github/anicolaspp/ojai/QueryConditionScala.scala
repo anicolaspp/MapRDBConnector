@@ -5,14 +5,14 @@ import java.sql.Timestamp
 import org.ojai.store.QueryCondition
 import org.ojai.types.OTimestamp
 
-object ScalaOJAIOperators {
+object QueryConditionScala {
 
   /**
     * Generic extensions for OJAI QueryCondition.
     *
     * @param cond QueryCondition to apply operators to.
     */
-  implicit class QueryConditionOps(cond: QueryCondition) {
+  implicit class QueryConditionOps(cond: QueryCondition) extends Serializable {
 
     def equalTo[A](field: String, value: A): QueryCondition = FieldQuery(cond, field) === value
 

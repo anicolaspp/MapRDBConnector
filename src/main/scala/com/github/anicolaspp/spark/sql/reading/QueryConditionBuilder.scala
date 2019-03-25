@@ -10,7 +10,7 @@ import org.ojai.types.OTimestamp
 object QueryConditionBuilder extends Logging {
 
   import collection.JavaConversions._
-  import com.github.anicolaspp.ojai.ScalaOJAIOperators._
+  import com.github.anicolaspp.ojai.QueryConditionScala._
 
   def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): String =
     createFilterCondition(filters).asJsonString()

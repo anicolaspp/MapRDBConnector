@@ -10,6 +10,7 @@ import org.ojai.types.OTimestamp
 object QueryConditionBuilder extends Logging {
 
   import collection.JavaConversions._
+  import com.github.anicolaspp.ojai.ScalaOJAIOperators._
 
   def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): String =
     createFilterCondition(filters).asJsonString()
@@ -86,94 +87,17 @@ object QueryConditionBuilder extends Logging {
       case IsNotNull(field) => connection.newCondition().exists(field)
       case In(field, values) => connection.newCondition().in(field, values.toList)
       case StringStartsWith(field, value) => connection.newCondition().matches(field, value)
-      case eq@EqualTo(_, _) => evalEqualTo(eq)
-      case lt@LessThan(_, _) => evalLessThan(lt)
-      case le@LessThanOrEqual(_, _) => evalLessThanEqual(le)
-      case gt@GreaterThan(_, _) => evalGreaterThan(gt)
-      case ge@GreaterThanOrEqual(_, _) => evalGreaterThanEqual(ge)
+      case EqualTo(field, value) => connection.newCondition().field(field) === value
+      case LessThan(field, value) => connection.newCondition().field(field) < value
+      case LessThanOrEqual(field, value) => connection.newCondition().field(field) <= value
+      case GreaterThan(field, value) => connection.newCondition.field(field) > value
+      case GreaterThanOrEqual(field, value) => connection.newCondition.field(field) >= value
     }
+
+    FieldQuery(null, "")
 
     log.debug("evalSingleFilter: " + filter.toString + " =============== " + simpleCondition.toString)
 
     simpleCondition.build()
   }
-
-
-  private def evalEqualTo(filter: EqualTo)(implicit connection: Connection) = filter match {
-    case EqualTo(field, value: Double) => connection.newCondition().is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Float) => connection.newCondition().is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Boolean) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Byte) => connection.newCondition.is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.EQUAL, value)
-    case EqualTo(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.EQUAL,new OTimestamp(value.getTime))
-
-    case EqualTo(_, _) => universalCondition
-  }
-
-  private def evalLessThan(filter: LessThan)(implicit connection: Connection) = filter match {
-    case LessThan(field, value: Double) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Float) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Int) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Long) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Short) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Boolean) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Byte) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.LESS, value)
-    case LessThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS, new OTimestamp(value.getTime))
-
-    case LessThan(_, _) => universalCondition
-  }
-
-  private def evalLessThanEqual(filter: LessThanOrEqual)(implicit connection: Connection) = filter match {
-    case LessThanOrEqual(field, value: Double) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Float) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Int) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Long) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Short) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Boolean) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Byte) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: String) => connection.newCondition().is(field, QueryCondition.Op.LESS_OR_EQUAL, value)
-    case LessThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.LESS_OR_EQUAL, new OTimestamp(value.getTime))
-
-    case LessThanOrEqual(_, _) => universalCondition
-  }
-
-  private def evalGreaterThan(filter: GreaterThan)(implicit connection: Connection) = filter match {
-    case GreaterThan(field, value: Double) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Float) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Boolean) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Byte) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER, value)
-    case GreaterThan(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER, new OTimestamp(value.getTime))
-
-    case GreaterThan(_, _) => universalCondition
-  }
-
-  private def evalGreaterThanEqual(filter: GreaterThanOrEqual)(implicit connection: Connection) = filter match {
-    case GreaterThanOrEqual(field, value: Double) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Float) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Int) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Long) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Short) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Boolean) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Byte) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: String) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, value)
-    case GreaterThanOrEqual(field, value: Timestamp) => connection.newCondition.is(field, QueryCondition.Op.GREATER_OR_EQUAL, new OTimestamp(value.getTime))
-
-    case GreaterThanOrEqual(_, _) => universalCondition
-  }
-
-  /**
-    * If we don't know how to parse an specific type, this condition matches all records
-    *
-    * @param connection
-    * @return
-    */
-  private def universalCondition(implicit connection: Connection) = connection.newCondition().exists("_id")
 }

@@ -1,8 +1,8 @@
 package com.github.anicolaspp.spark
 
 
-import com.github.anicolaspp.ojai.OJAIReader
-import com.github.anicolaspp.ojai.OJAIReader.Cell
+import com.github.anicolaspp.ojai.OJAISparkPartitionReader
+import com.github.anicolaspp.ojai.OJAISparkPartitionReader.Cell
 import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
 import org.apache.spark.annotation.Experimental
@@ -59,7 +59,7 @@ object MapRDB {
 
             val partitionCellIterator = partition.map(row => Cell(row.get(0), columnDataType))
 
-            OJAIReader.groupedPartitionReader(concurrentQueries).readFrom(partitionCellIterator, table, schema, right)
+            OJAISparkPartitionReader.groupedPartitionReader(concurrentQueries).readFrom(partitionCellIterator, table, schema, right)
           }
         }
 

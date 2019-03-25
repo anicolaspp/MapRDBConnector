@@ -11,9 +11,8 @@ object QueryConditionBuilder extends Logging {
 
   import collection.JavaConversions._
 
-//  def empty(implicit connection: Connection) = connection.newCondition().build().asJsonString()
-
-  def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): String = createFilterCondition(filters).asJsonString()
+  def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): String =
+    createFilterCondition(filters).asJsonString()
 
   def addTabletInfo(queryJson: String, queryCondition: String): String =
     if (queryJson == "{}") {

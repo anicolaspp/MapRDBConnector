@@ -60,7 +60,7 @@ object QueryConditionExtensions {
       case _id: String if field == "_id" => {
         val s = "\u0003" + _id
 
-        cond.is("$$row_key", QueryCondition.Op.EQUAL, Values.parseBinary(Base64.getEncoder.encodeToString(s.getBytes("UTF-8"))))
+        cond.is("$$row_key", op, Values.parseBinary(Base64.getEncoder.encodeToString(s.getBytes("UTF-8"))))
       }
       case _: String => cond.is(field, op, value.asInstanceOf[String])
       case _: ByteBuffer => cond.is(field, op, value.asInstanceOf[ByteBuffer])

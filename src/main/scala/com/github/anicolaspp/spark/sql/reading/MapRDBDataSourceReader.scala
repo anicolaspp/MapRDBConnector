@@ -1,6 +1,5 @@
 package com.github.anicolaspp.spark.sql.reading
 
-import java.sql.Timestamp
 import java.util
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
@@ -41,15 +40,28 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
       .toList
   }
 
-  override def pushFilters(filters: Array[Filter]): Array[Filter] =
-    filters.partition(isSupportedFilter) match {
-      case (supported, unsupported) =>
-        supportedFilters = supported.toList
+  override def pushFilters(filters: Array[Filter]): Array[Filter] = {
+      val (supported, unsupported) = filters.partition(isSupportedFilter)
+      supportedFilters = supported.toList
 
-        unsupported
-    }
+      println("supported: ")
+      supportedFilters.foreach(print)
+      println()
 
-  override def pushedFilters(): Array[Filter] = supportedFilters.toArray
+      println("unsupported: ")
+      unsupported.foreach(print)
+      println()
+
+      unsupported
+  }
+
+  override def pushedFilters(): Array[Filter] = {
+    println("pushedFilters: ")
+    supportedFilters.foreach(print)
+    println()
+
+    supportedFilters.toArray
+  }
 
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 
@@ -68,17 +80,17 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
     case _: IsNotNull => true
     case _: In => true
     case _: StringStartsWith => true
-    case EqualTo(_, value) => SupportedFilterTypes.isSupportedType(value)
-    case LessThan(_, value) => SupportedFilterTypes.isSupportedType(value)
-    case LessThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
-    case GreaterThan(_, value) => SupportedFilterTypes.isSupportedType(value)
-    case GreaterThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case EqualTo(_, value) => true // SupportedFilterTypes.isSupportedType(value)
+    case LessThan(_, value) => true // SupportedFilterTypes.isSupportedType(value)
+    case LessThanOrEqual(_, value) => true // SupportedFilterTypes.isSupportedType(value)
+    case GreaterThan(_, value) => true //SupportedFilterTypes.isSupportedType(value)
+    case GreaterThanOrEqual(_, value) => true // SupportedFilterTypes.isSupportedType(value)
 
     case _ => false
   }
 
   private def logTabletInfo(descriptor: com.mapr.db.TabletInfo, tabletIndex: Int) =
-    log.debug(
+    log.info(
       s"TABLET: $tabletIndex ; " +
         s"PREFERRED LOCATIONS: ${descriptor.getLocations.mkString("[", ",", "]")} ; " +
         s"QUERY: ${descriptor.getCondition.asJsonString()}")
@@ -94,7 +106,7 @@ object SupportedFilterTypes {
     classOf[Long],
     classOf[Short],
     classOf[String],
-    classOf[Timestamp],
+    //    classOf[Timestamp],
     classOf[Boolean],
     classOf[Byte]
   )

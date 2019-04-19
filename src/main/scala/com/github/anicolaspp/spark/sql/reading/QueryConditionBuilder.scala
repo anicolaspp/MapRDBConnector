@@ -1,16 +1,14 @@
 package com.github.anicolaspp.spark.sql.reading
 
-import java.sql.Timestamp
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.sources._
 import org.ojai.store.{Connection, QueryCondition}
-import org.ojai.types.OTimestamp
 
 object QueryConditionBuilder extends Logging {
 
+  import com.github.anicolaspp.ojai.QueryConditionExtensions._
+
   import collection.JavaConversions._
-  import com.github.anicolaspp.ojai.QueryConditionScala._
 
   def buildQueryConditionFrom(filters: List[Filter])(implicit connection: Connection): String =
     createFilterCondition(filters).asJsonString()
@@ -31,7 +29,7 @@ object QueryConditionBuilder extends Logging {
     * @return
     */
   private def createFilterCondition(filters: List[Filter])(implicit connection: Connection): QueryCondition = {
-    log.debug(s"FILTERS TO PUSH DOWN: $filters")
+    log.info(s"FILTERS TO PUSH DOWN: $filters")
 
     val andCondition = connection.newCondition().and()
 
@@ -93,8 +91,6 @@ object QueryConditionBuilder extends Logging {
       case GreaterThan(field, value) => connection.newCondition.field(field) > value
       case GreaterThanOrEqual(field, value) => connection.newCondition.field(field) >= value
     }
-
-    FieldQuery(null, "")
 
     log.debug("evalSingleFilter: " + filter.toString + " =============== " + simpleCondition.toString)
 

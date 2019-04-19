@@ -28,6 +28,13 @@ class MapRDBDataPartitionReader(table: String,
 
   import scala.collection.JavaConverters._
 
+
+    log.info(filters.mkString("FILTERS: [", ", ", "]"))
+  //  log.info(tabletInfo.queryJson)
+
+  log.info(query.asJsonString())
+
+
   @transient private lazy val connection = DriverManager.getConnection("ojai:mapr:")
 
   @transient private lazy val store: DocumentStore = connection.getStore(table)
@@ -36,12 +43,12 @@ class MapRDBDataPartitionReader(table: String,
 
     val queryResult = store.find(query)
 
-    log.debug(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
+    log.info(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
 
     queryResult.asScala.iterator
   }
 
-  private def query: Query = {
+  @transient private lazy val query: Query = {
 
     val finalQueryConditionString = if (filters.nonEmpty) {
       val sparkFiltersQueryCondition = QueryConditionBuilder.buildQueryConditionFrom(filters)(connection)
@@ -51,7 +58,7 @@ class MapRDBDataPartitionReader(table: String,
       tabletInfo.queryJson
     }
 
-    log.debug(s"USING QUERY STRING: $finalQueryConditionString")
+    log.info(s"USING QUERY STRING: $finalQueryConditionString")
 
     log.debug(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
@@ -87,7 +94,7 @@ class MapRDBDataPartitionReader(table: String,
 
   }
 
-  override protected def logName: String = super.logName + s" ===== TABLET: ${tabletInfo.internalId}"
+  override protected def logName: String = "PARTITION_READER" + s" ===== TABLET: ${tabletInfo.internalId}"
 
   private def projectionsAsString: String =
     schema

@@ -81,13 +81,13 @@ object QueryConditionBuilder extends Logging {
   private def evalSingleFilter(filter: Filter)(implicit connection: Connection) = {
 
     val simpleCondition = filter match {
-      case IsNull(field) => connection.newCondition().notExists(field)
-      case IsNotNull(field) => connection.newCondition().exists(field)
-      case In(field, values) => connection.newCondition().in(field, values.toList)
+      case IsNull(field)                  => connection.newCondition().notExists(field)
+      case IsNotNull(field)               => connection.newCondition().exists(field)
+      case In(field, values)              => connection.newCondition().in(field, values.toList)
       case StringStartsWith(field, value) => connection.newCondition().matches(field, value)
-      case EqualTo(field, value) => connection.newCondition().field(field) === value
-      case LessThan(field, value) => connection.newCondition().field(field) < value
-      case LessThanOrEqual(field, value) => connection.newCondition().field(field) <= value
+      case EqualTo(field, value)          => connection.newCondition().field(field) === value
+      case LessThan(field, value)         => connection.newCondition().field(field) < value
+      case LessThanOrEqual(field, value)  => connection.newCondition().field(field) <= value
       case GreaterThan(field, value) => connection.newCondition.field(field) > value
       case GreaterThanOrEqual(field, value) => connection.newCondition.field(field) >= value
     }

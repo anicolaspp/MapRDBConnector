@@ -55,14 +55,12 @@ object QueryConditionExtensions {
       case _: Boolean => cond.is(field, op, value.asInstanceOf[Boolean])
       case _: Short => cond.is(field, op, value.asInstanceOf[Short])
       case _: Int => cond.is(field, op, value.asInstanceOf[Int])
+      case _id: Byte if field == "_id" => cond.is("$$row_key", op, _id)
       case _: Byte => cond.is(field, op, value.asInstanceOf[Byte])
       case _: Double => cond.is(field, op, value.asInstanceOf[Double])
-      case _id: String if field == "_id" => {
-        val s = "\u0003" + _id
-
-        cond.is("$$row_key", op, Values.parseBinary(Base64.getEncoder.encodeToString(s.getBytes("UTF-8"))))
-      }
+      case _id: String if field == "_id" => cond.is("$$row_key", op, Values.parseBinary(Base64.getEncoder.encodeToString(("\u0003" + _id).getBytes("UTF-8"))))
       case _: String => cond.is(field, op, value.asInstanceOf[String])
+      case _id: ByteBuffer if field == "_id" => cond.is("$$row_key", op, _id)
       case _: ByteBuffer => cond.is(field, op, value.asInstanceOf[ByteBuffer])
 
       case _ => cond

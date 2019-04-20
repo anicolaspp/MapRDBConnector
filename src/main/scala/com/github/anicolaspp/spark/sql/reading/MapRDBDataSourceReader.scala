@@ -1,5 +1,6 @@
 package com.github.anicolaspp.spark.sql.reading
 
+import java.sql.Timestamp
 import java.util
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
@@ -41,27 +42,21 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
   }
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
-      val (supported, unsupported) = filters.partition(isSupportedFilter)
-      supportedFilters = supported.toList
+    val (supported, unsupported) = filters.partition(isSupportedFilter)
+    supportedFilters = supported.toList
 
-      println("supported: ")
-      supportedFilters.foreach(print)
-      println()
-
-      println("unsupported: ")
-      unsupported.foreach(print)
-      println()
-
-      unsupported
-  }
-
-  override def pushedFilters(): Array[Filter] = {
-    println("pushedFilters: ")
+    println("supported: ")
     supportedFilters.foreach(print)
     println()
 
-    supportedFilters.toArray
+    println("unsupported: ")
+    unsupported.foreach(print)
+    println()
+
+    unsupported
   }
+
+  override def pushedFilters(): Array[Filter] = supportedFilters.toArray
 
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 
@@ -80,11 +75,11 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
     case _: IsNotNull => true
     case _: In => true
     case _: StringStartsWith => true
-    case EqualTo(_, value) => true // SupportedFilterTypes.isSupportedType(value)
-    case LessThan(_, value) => true // SupportedFilterTypes.isSupportedType(value)
-    case LessThanOrEqual(_, value) => true // SupportedFilterTypes.isSupportedType(value)
-    case GreaterThan(_, value) => true //SupportedFilterTypes.isSupportedType(value)
-    case GreaterThanOrEqual(_, value) => true // SupportedFilterTypes.isSupportedType(value)
+    case EqualTo(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case LessThan(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case LessThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case GreaterThan(_, value) => SupportedFilterTypes.isSupportedType(value)
+    case GreaterThanOrEqual(_, value) => SupportedFilterTypes.isSupportedType(value)
 
     case _ => false
   }
@@ -99,14 +94,14 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
 
 object SupportedFilterTypes {
 
-  private val supportedTypes = List[Class[_]](
+  private lazy val supportedTypes = List[Class[_]](
     classOf[Double],
     classOf[Float],
     classOf[Int],
     classOf[Long],
     classOf[Short],
     classOf[String],
-    //    classOf[Timestamp],
+    classOf[Timestamp],
     classOf[Boolean],
     classOf[Byte]
   )

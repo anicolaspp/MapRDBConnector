@@ -66,10 +66,16 @@ class MapRDBDataPartitionReader(table: String,
       .newQuery()
       .where(finalQueryConditionString)
       .select(projectionsNames: _*)
+      .setOptions(queryOptions)
       .build()
+
 
     query
   }
+
+  private lazy val queryOptions =
+    hintedIndexes
+      .foldLeft(connection.newDocument())((doc, hint) => doc.set("ojai.mapr.query.hint-using-index", hint))
 
   override def preferredLocations(): Array[String] = tabletInfo.locations
 

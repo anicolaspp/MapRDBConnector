@@ -29,7 +29,7 @@ object QueryConditionBuilder extends Logging {
     * @return
     */
   private def createFilterCondition(filters: List[Filter])(implicit connection: Connection): QueryCondition = {
-    log.info(s"FILTERS TO PUSH DOWN: $filters")
+    log.debug(s"FILTERS TO PUSH DOWN: $filters")
 
     val andCondition = connection.newCondition().and()
 

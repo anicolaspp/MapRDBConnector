@@ -45,14 +45,6 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
     val (supported, unsupported) = filters.partition(isSupportedFilter)
     supportedFilters = supported.toList
 
-    println("supported: ")
-    supportedFilters.foreach(print)
-    println()
-
-    println("unsupported: ")
-    unsupported.foreach(print)
-    println()
-
     unsupported
   }
 
@@ -85,7 +77,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
   }
 
   private def logTabletInfo(descriptor: com.mapr.db.TabletInfo, tabletIndex: Int) =
-    log.info(
+    log.debug(
       s"TABLET: $tabletIndex ; " +
         s"PREFERRED LOCATIONS: ${descriptor.getLocations.mkString("[", ",", "]")} ; " +
         s"QUERY: ${descriptor.getCondition.asJsonString()}")

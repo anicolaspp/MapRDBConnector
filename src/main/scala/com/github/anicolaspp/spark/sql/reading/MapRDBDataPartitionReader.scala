@@ -29,10 +29,10 @@ class MapRDBDataPartitionReader(table: String,
   import scala.collection.JavaConverters._
 
 
-    log.info(filters.mkString("FILTERS: [", ", ", "]"))
-  //  log.info(tabletInfo.queryJson)
+    log.debug(filters.mkString("FILTERS: [", ", ", "]"))
+  //  log.debug(tabletInfo.queryJson)
 
-  log.info(query.asJsonString())
+  log.debug(query.asJsonString())
 
 
   @transient private lazy val connection = DriverManager.getConnection("ojai:mapr:")
@@ -43,7 +43,7 @@ class MapRDBDataPartitionReader(table: String,
 
     val queryResult = store.find(query)
 
-    log.info(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
+    log.debug(s"OJAI QUERY PLAN: ${queryResult.getQueryPlan}")
 
     queryResult.asScala.iterator
   }
@@ -58,7 +58,7 @@ class MapRDBDataPartitionReader(table: String,
       tabletInfo.queryJson
     }
 
-    log.info(s"USING QUERY STRING: $finalQueryConditionString")
+    log.debug(s"USING QUERY STRING: $finalQueryConditionString")
 
     log.debug(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
@@ -73,7 +73,7 @@ class MapRDBDataPartitionReader(table: String,
     query
   }
 
-  private lazy val queryOptions =
+  private def queryOptions =
     hintedIndexes
       .foldLeft(connection.newDocument())((doc, hint) => doc.set("ojai.mapr.query.hint-using-index", hint))
 

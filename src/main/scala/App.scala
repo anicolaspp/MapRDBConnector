@@ -1,9 +1,11 @@
 package com.github.anicolaspp
 
 import com.github.anicolaspp.spark.sql.reading.JoinType
+import com.google.common.collect.BoundType
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
+import org.joda.time.DateTime
 
 
 // ONLY for testing
@@ -23,15 +25,31 @@ object App {
     sparkSession.conf.set("spark.sql.streaming.checkpointLocation", "/Users/nperez/check")
     sparkSession.conf.set("spark.sql.streaming.schemaInference", value = true)
 
-    sparkSession.sparkContext.setLogLevel("INFO")
+    sparkSession.sparkContext.setLogLevel(args(0))
 
     println("HERE")
 
 
-    val data = sparkSession.loadFromMapRDB("/user/mapr/tables/random_data", new StructType().add("_id", StringType))
+    val data1 = sparkSession.loadFromMapRDB("/user/mapr/tables/random_data", new StructType().add("_id", StringType))
+    val data2 = sparkSession.loadFromMapRDB("/user/mapr/tables/random_data", new StructType().add("_id", StringType), args(1).toInt)
+
+
+    println(DateTime.now())
+    println(data1.count())
+    println(DateTime.now())
+
+    println(DateTime.now())
+    println(data2.count())
+    println(DateTime.now())
+
 
     //    data.where("_id = 1000008807").show
-    data.where("_id = '1966436062'").show
+//    data.where("_id = '1966436062'").show
+    
+
+
+
+
 
 //
 //      val rdd = sparkSession.sparkContext.parallelize(1 to 1000000).map(n => Row(n.toString))

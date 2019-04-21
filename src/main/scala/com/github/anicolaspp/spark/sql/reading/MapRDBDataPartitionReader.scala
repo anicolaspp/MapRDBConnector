@@ -28,9 +28,7 @@ class MapRDBDataPartitionReader(table: String,
 
   import scala.collection.JavaConverters._
 
-
-    log.debug(filters.mkString("FILTERS: [", ", ", "]"))
-  //  log.debug(tabletInfo.queryJson)
+  log.debug(filters.mkString("FILTERS: [", ", ", "]"))
 
   log.debug(query.asJsonString())
 
@@ -62,15 +60,12 @@ class MapRDBDataPartitionReader(table: String,
 
     log.debug(s"PROJECTIONS TO PUSH DOWN: $projectionsAsString")
 
-    val query = connection
+    connection
       .newQuery()
       .where(finalQueryConditionString)
       .select(projectionsNames: _*)
       .setOptions(queryOptions)
       .build()
-
-
-    query
   }
 
   private def queryOptions =
@@ -88,7 +83,6 @@ class MapRDBDataPartitionReader(table: String,
       val document = documents.next()
 
       log.debug(document.asJsonString())
-
 
       documentToRow(MapRDBSpark.newDocument(document), schema)
     }

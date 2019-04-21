@@ -5,16 +5,27 @@ import org.apache.spark.sql.sources.v2.reader._
 import org.apache.spark.sql.sources.v2.{DataSourceOptions, ReadSupportWithSchema}
 import org.apache.spark.sql.types.StructType
 
+import scala.util.Try
+
 class Reader extends ReadSupportWithSchema with Logging {
 
   override def createReader(schema: StructType, options: DataSourceOptions): DataSourceReader = {
 
     val tablePath = options.get("path").get()
 
-    log.debug(s"TABLE PATH BEING USED: $tablePath")
+    log.info(s"TABLE PATH BEING USED: $tablePath")
 
     val hintedIndexes = options.get("idx").orElse("").trim.split(",").toList
 
-    new MapRDBDataSourceReader(schema, tablePath, hintedIndexes)
+    val readersPerTablet = getNumberOfReaders(options)
+
+    new MapRDBDataSourceMultiReader(schema, tablePath, hintedIndexes, readersPerTablet)
   }
+
+  private def getNumberOfReaders(options: DataSourceOptions): Int = Try {
+    val numberOfReaders = options.get("readers").orElse("1").toInt
+
+    if (numberOfReaders < 1) 1 else numberOfReaders
+
+  }.getOrElse(1)
 }

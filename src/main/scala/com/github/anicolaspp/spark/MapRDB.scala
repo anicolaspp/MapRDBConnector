@@ -14,14 +14,14 @@ object MapRDB {
 
   implicit class SessionOps(sparkSession: SparkSession) {
 
-    def loadFromMapRDB(path: String, schema: StructType): DataFrame = {
+    def loadFromMapRDB(path: String, schema: StructType, many: Int = 1): DataFrame = {
       sparkSession
         .read
         .format("com.github.anicolaspp.spark.sql.reading.Reader")
         .schema(schema)
+        .option("readers", many)
         .load(path)
     }
-
   }
 
   implicit class DataFrameOps(dataFrame: DataFrame) {

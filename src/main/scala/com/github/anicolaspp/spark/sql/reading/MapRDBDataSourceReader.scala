@@ -1,6 +1,5 @@
 package com.github.anicolaspp.spark.sql.reading
 
-import java.sql.Timestamp
 import java.util
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
@@ -10,7 +9,7 @@ import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
 
-class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
+abstract class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
   extends DataSourceReader
     with Logging
     with SupportsPushDownFilters
@@ -32,11 +31,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
       .getTable(tablePath)
       .getTabletInfos
       .zipWithIndex
-      .map { case (descriptor, idx) =>
-        logTabletInfo(descriptor, idx)
-
-        MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString)
-      }
+      .map { case (descriptor, idx) => MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString) }
       .map(createReaderFactory)
       .toList
   }
@@ -52,13 +47,16 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
 
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 
-  private def createReaderFactory(tabletInfo: MapRDBTabletInfo) =
+  protected def createReaderFactory(tabletInfo: MapRDBTabletInfo): MapRDBDataPartitionReader = {
+    logTabletInfo(tabletInfo)
+
     new MapRDBDataPartitionReader(
       tablePath,
       supportedFilters,
       readSchema(),
       tabletInfo,
       hintedIndexes)
+  }
 
   private def isSupportedFilter(filter: Filter): Boolean = filter match {
     case And(a, b) => isSupportedFilter(a) && isSupportedFilter(b)
@@ -76,27 +74,9 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
     case _ => false
   }
 
-  private def logTabletInfo(descriptor: com.mapr.db.TabletInfo, tabletIndex: Int) =
+  private def logTabletInfo(tabletInfo: MapRDBTabletInfo) =
     log.debug(
-      s"TABLET: $tabletIndex ; " +
-        s"PREFERRED LOCATIONS: ${descriptor.getLocations.mkString("[", ",", "]")} ; " +
-        s"QUERY: ${descriptor.getCondition.asJsonString()}")
-}
-
-
-object SupportedFilterTypes {
-
-  private lazy val supportedTypes = List[Class[_]](
-    classOf[Double],
-    classOf[Float],
-    classOf[Int],
-    classOf[Long],
-    classOf[Short],
-    classOf[String],
-    classOf[Timestamp],
-    classOf[Boolean],
-    classOf[Byte]
-  )
-
-  def isSupportedType(value: Any): Boolean = supportedTypes.contains(value.getClass)
+      s"TABLET: ${tabletInfo.internalId} ; " +
+        s"PREFERRED LOCATIONS: ${tabletInfo.locations.mkString("[", ",", "]")} ; " +
+        s"QUERY: ${tabletInfo.queryJson}")
 }

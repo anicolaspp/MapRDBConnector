@@ -75,9 +75,7 @@ lazy val maprdbconnector = project.in(file("."))
 
       "com.mapr.db" % "maprdb-spark" % "2.3.1-mapr-1808" % "provided",
       "com.mapr.db" % "maprdb" % "6.1.0-mapr" % "provided",
-      "xerces" % "xercesImpl" % "2.11.0" % "provided",
-
-      "com.google.guava" % "guava" % "7.1-jre"
+      "xerces" % "xercesImpl" % "2.11.0" % "provided"
     )
   )
 

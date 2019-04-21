@@ -13,20 +13,19 @@ class Reader extends ReadSupportWithSchema with Logging {
 
     val tablePath = options.get("path").get()
 
-    log.debug(s"TABLE PATH BEING USED: $tablePath")
+    log.info(s"TABLE PATH BEING USED: $tablePath")
 
     val hintedIndexes = options.get("idx").orElse("").trim.split(",").toList
 
     val readersPerTablet = getNumberOfReaders(options)
 
-    if (readersPerTablet > 1) {
-      new MapRDBDataSourceReaderMultiTabletReader(schema, tablePath, hintedIndexes, readersPerTablet)
-    } else {
-      new MapRDBDataSourceReader(schema, tablePath, hintedIndexes)
-    }
+    new MapRDBDataSourceMultiReader(schema, tablePath, hintedIndexes, readersPerTablet)
   }
 
   private def getNumberOfReaders(options: DataSourceOptions): Int = Try {
-    options.get("readers").orElse("1").toInt
+    val numberOfReaders = options.get("readers").orElse("1").toInt
+
+    if (numberOfReaders < 1) 1 else numberOfReaders
+
   }.getOrElse(1)
 }

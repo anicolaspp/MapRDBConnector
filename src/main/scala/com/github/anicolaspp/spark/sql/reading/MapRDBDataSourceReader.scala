@@ -6,13 +6,10 @@ import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.sources._
-import org.apache.spark.sql.sources.v2.reader.{DataReader, DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
+import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
-import org.ojai.store.{DocumentStore, DriverManager}
 
-import scala.util.Random
-
-class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
+abstract class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
   extends DataSourceReader
     with Logging
     with SupportsPushDownFilters
@@ -34,11 +31,7 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
       .getTable(tablePath)
       .getTabletInfos
       .zipWithIndex
-      .map { case (descriptor, idx) =>
-        logTabletInfo(descriptor, idx)
-
-        MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString)
-      }
+      .map { case (descriptor, idx) => MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString) }
       .map(createReaderFactory)
       .toList
   }
@@ -54,13 +47,16 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
 
   override def pruneColumns(requiredSchema: StructType): Unit = projections = Some(requiredSchema)
 
-  protected def createReaderFactory(tabletInfo: MapRDBTabletInfo) =
+  protected def createReaderFactory(tabletInfo: MapRDBTabletInfo): MapRDBDataPartitionReader = {
+    logTabletInfo(tabletInfo)
+
     new MapRDBDataPartitionReader(
       tablePath,
       supportedFilters,
       readSchema(),
       tabletInfo,
       hintedIndexes)
+  }
 
   private def isSupportedFilter(filter: Filter): Boolean = filter match {
     case And(a, b) => isSupportedFilter(a) && isSupportedFilter(b)
@@ -78,79 +74,9 @@ class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexe
     case _ => false
   }
 
-  private def logTabletInfo(descriptor: com.mapr.db.TabletInfo, tabletIndex: Int) =
+  private def logTabletInfo(tabletInfo: MapRDBTabletInfo) =
     log.debug(
-      s"TABLET: $tabletIndex ; " +
-        s"PREFERRED LOCATIONS: ${descriptor.getLocations.mkString("[", ",", "]")} ; " +
-        s"QUERY: ${descriptor.getCondition.asJsonString()}")
-}
-
-
-class MapRDBDataSourceReaderMultiTabletReader(schema: StructType,
-                                              tablePath: String,
-                                              hintedIndexes: List[String],
-                                              readersPerTablet: Int)
-  extends MapRDBDataSourceReader(schema, tablePath, hintedIndexes) {
-
-  import collection.JavaConversions._
-  import scala.collection.JavaConverters._
-
-  @transient private lazy val connection = DriverManager.getConnection("ojai:mapr:")
-
-  @transient private lazy val store: DocumentStore = connection.getStore(tablePath)
-
-
-  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] = {
-
-    import com.github.anicolaspp.ojai.QueryConditionExtensions._
-    
-    val conditions = com.mapr.db.MapRDB
-      .getTable(tablePath)
-      .getTabletInfos
-      .par
-      .flatMap { tablet =>
-        val query = connection
-          .newQuery()
-          .where(tablet.getCondition)
-          .select("_id")
-          .build()
-
-        val ids = store.find(query)
-
-        val partition = ids.asScala.toList
-
-        val partitionSize = partition.size
-
-        log.info(s"READER SIZE == $partitionSize")
-
-        partition
-          .grouped((partitionSize / readersPerTablet) + 1)
-          .filter(_.nonEmpty)
-          .map(group => (group.head.getIdString, group.last.getIdString))
-          .map { range =>
-
-            println(range)
-
-            val lowerBound = connection.newCondition().field("_id") >= range._1
-            val upperBound = connection.newCondition().field("_id") <= range._2
-
-            val cond = connection
-              .newCondition()
-              .and()
-              .condition(lowerBound.build())
-              .condition(upperBound.build())
-              .close()
-              .build()
-              .asJsonString()
-
-            MapRDBTabletInfo(Random.nextInt(), tablet.getLocations, cond)
-          }
-      }
-
-    val factories = conditions.map(createReaderFactory).toList
-
-    log.info(s"CREATING ${factories.length} READERS")
-
-    factories
-  }
+      s"TABLET: ${tabletInfo.internalId} ; " +
+        s"PREFERRED LOCATIONS: ${tabletInfo.locations.mkString("[", ",", "]")} ; " +
+        s"QUERY: ${tabletInfo.queryJson}")
 }

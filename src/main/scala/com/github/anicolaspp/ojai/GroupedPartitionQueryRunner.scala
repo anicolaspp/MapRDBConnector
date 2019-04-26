@@ -13,8 +13,7 @@ private[ojai] class GroupedPartitionQueryRunner(querySize: Int) extends OJAISpar
   import com.github.anicolaspp.concurrent.ConcurrentContext.Implicits._
   import com.mapr.db.spark.sql.utils.MapRSqlUtils._
   import org.ojai.store._
-
-  import collection.JavaConversions._
+  
   import scala.collection.JavaConverters._
 
   /**
@@ -37,7 +36,7 @@ private[ojai] class GroupedPartitionQueryRunner(querySize: Int) extends OJAISpar
     val parallelRunningQueries = partition
       .map(cell => convertToDataType(cell.value, cell.dataType))
       .grouped(querySize)
-      .map(group => connection.newCondition().in(right, group).build())
+      .map(group => connection.newCondition().in(right, group.asJava).build())
       .map(cond =>
         connection
           .newQuery()

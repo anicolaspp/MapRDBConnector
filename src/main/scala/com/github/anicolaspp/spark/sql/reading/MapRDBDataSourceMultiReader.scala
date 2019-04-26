@@ -3,8 +3,8 @@ package com.github.anicolaspp.spark.sql.reading
 import java.util
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.sources.v2.reader.DataReaderFactory
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.sources.v2.reader.InputPartition
 import org.apache.spark.sql.types.StructType
 import org.ojai.store.{DocumentStore, DriverManager}
 
@@ -15,15 +15,14 @@ class MapRDBDataSourceMultiReader(schema: StructType,
                                   hintedIndexes: List[String],
                                   readersPerTablet: Int)
   extends MapRDBDataSourceReader(schema, tablePath, hintedIndexes) {
-
-  import collection.JavaConversions._
+  
   import scala.collection.JavaConverters._
 
-  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] =
+  override def planInputPartitions(): util.List[InputPartition[InternalRow]] =
     if (readersPerTablet == 1) {
-      super.createDataReaderFactories()
+      super.planInputPartitions()
     } else {
-      createReaders
+      createReaders.asInstanceOf[List[InputPartition[InternalRow]]].asJava
     }
 
   private def createReaders: List[MapRDBDataPartitionReader] = {

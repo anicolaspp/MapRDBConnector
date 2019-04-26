@@ -1,7 +1,7 @@
 package com.github.anicolaspp.spark.sql.writing
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources.v2.writer.{DataSourceWriter, DataWriterFactory, WriterCommitMessage}
 import org.apache.spark.sql.types.StructType
 
@@ -9,7 +9,7 @@ class MapRDBDataSourceWriter(table: String, schema: StructType) extends DataSour
 
   private var globallyCommittedIds = List.empty[String]
 
-  override def createWriterFactory(): DataWriterFactory[Row] = new MapRDBDataWriterFactory(table, schema)
+  override def createWriterFactory(): DataWriterFactory[InternalRow] = new MapRDBDataWriterFactory(table, schema)
 
   override def commit(messages: Array[WriterCommitMessage]): Unit = {
 

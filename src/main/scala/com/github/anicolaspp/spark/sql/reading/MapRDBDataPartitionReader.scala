@@ -4,8 +4,10 @@ import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
 import com.mapr.db.spark.MapRDBSpark
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.{GenericInternalRow, GenericRowWithSchema}
 import org.apache.spark.sql.sources._
-import org.apache.spark.sql.sources.v2.reader.{DataReader, DataReaderFactory}
+import org.apache.spark.sql.sources.v2.reader.{InputPartition, InputPartitionReader}
 import org.apache.spark.sql.types._
 
 /**
@@ -21,7 +23,7 @@ class MapRDBDataPartitionReader(table: String,
                                 schema: StructType,
                                 tabletInfo: MapRDBTabletInfo,
                                 hintedIndexes: List[String])
-  extends DataReaderFactory[Row] with Logging {
+  extends InputPartition[InternalRow] with Logging {
 
   import com.mapr.db.spark.sql.utils.MapRSqlUtils._
   import org.ojai.store._
@@ -74,26 +76,6 @@ class MapRDBDataPartitionReader(table: String,
 
   override def preferredLocations(): Array[String] = tabletInfo.locations
 
-  override def createDataReader(): DataReader[Row] = new DataReader[Row] {
-
-    override def next(): Boolean = documents.hasNext
-
-    override def get(): Row = {
-
-      val document = documents.next()
-
-      log.debug(document.asJsonString())
-
-      documentToRow(MapRDBSpark.newDocument(document), schema)
-    }
-
-    override def close(): Unit = {
-      store.close()
-      connection.close()
-    }
-
-  }
-
   override protected def logName: String = "PARTITION_READER" + s" ===== TABLET: ${tabletInfo.internalId}"
 
   private def projectionsAsString: String =
@@ -103,4 +85,26 @@ class MapRDBDataPartitionReader(table: String,
       .mkString("[", ",", "]")
 
   private def projectionsNames: Array[String] = schema.fields.map(_.name)
+
+  override def createPartitionReader(): InputPartitionReader[InternalRow] = new InputPartitionReader[InternalRow] {
+    override def next(): Boolean = documents.hasNext
+
+    override def get(): InternalRow = {
+
+      val document = documents.next()
+
+      log.debug(document.asJsonString())
+
+      val row = documentToRow(MapRDBSpark.newDocument(document), schema)
+
+      val values = (0 until row.length).foldLeft(List.empty[Any])((acc, idx) => row.get(idx) :: acc).reverse
+
+      InternalRow(values)
+    }
+
+    override def close(): Unit = {
+      store.close()
+      connection.close()
+    }
+  }
 }

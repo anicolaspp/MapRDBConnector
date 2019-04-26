@@ -5,8 +5,9 @@ import java.util
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources._
-import org.apache.spark.sql.sources.v2.reader.{DataReaderFactory, DataSourceReader, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
+import org.apache.spark.sql.sources.v2.reader.{DataSourceReader, InputPartition, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
 import org.apache.spark.sql.types.StructType
 
 abstract class MapRDBDataSourceReader(schema: StructType, tablePath: String, hintedIndexes: List[String])
@@ -26,16 +27,15 @@ abstract class MapRDBDataSourceReader(schema: StructType, tablePath: String, hin
     case Some(fieldsToProject) => fieldsToProject
   }
 
-  override def createDataReaderFactories(): util.List[DataReaderFactory[Row]] = {
+  override def planInputPartitions(): util.List[InputPartition[InternalRow]] = 
     com.mapr.db.MapRDB
-      .getTable(tablePath)
-      .getTabletInfos
-      .zipWithIndex
-      .map { case (descriptor, idx) => MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString) }
-      .map(createReaderFactory)
-      .toList
-  }
-
+          .getTable(tablePath)
+          .getTabletInfos
+          .zipWithIndex
+          .map { case (descriptor, idx) => MapRDBTabletInfo(idx, descriptor.getLocations, descriptor.getCondition.asJsonString) }
+          .map(createReaderFactory)
+          .toList
+  
   override def pushFilters(filters: Array[Filter]): Array[Filter] = {
     val (supported, unsupported) = filters.partition(isSupportedFilter)
     supportedFilters = supported.toList

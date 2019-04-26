@@ -1,8 +1,8 @@
 import ReleaseTransformations._
 
-name := "MapRDBConnector"
+name := "MapRDBConnector-spark-2.4"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.8"
 
 organization in ThisBuild := "com.github.anicolaspp"
 
@@ -67,8 +67,8 @@ lazy val maprdbconnector = project.in(file("."))
     resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
     
     libraryDependencies ++= Seq(
-      "org.apache.spark" % "spark-core_2.11" % "2.3.2" % "provided",
-      "org.apache.spark" % "spark-sql_2.11" % "2.3.2" % "provided",
+      "org.apache.spark" % "spark-core_2.11" % "2.4.0" % "provided",
+      "org.apache.spark" % "spark-sql_2.11" % "2.4.0" % "provided",
 
       "org.ojai" % "ojai" % "3.0-mapr-1808",
       "org.ojai" % "ojai-scala" % "3.0-mapr-1808",

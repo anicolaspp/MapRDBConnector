@@ -4,7 +4,6 @@ import java.util
 
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.sources.v2.reader.{DataSourceReader, InputPartition, SupportsPushDownFilters, SupportsPushDownRequiredColumns}

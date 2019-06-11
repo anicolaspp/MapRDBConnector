@@ -52,7 +52,7 @@ lazy val maprdbconnector = project.in(file("."))
       inquireVersions,                        // : ReleaseStep
       runClean,                               // : ReleaseStep
       runTest,                                // : ReleaseStep
-      setReleaseVersion,                      // : ReleaseStep
+//      setReleaseVersion,                      // : ReleaseStep
       commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
       tagRelease,                             // : ReleaseStep
       publishArtifacts,                       // : ReleaseStep, checks whether `publishTo` is properly set up

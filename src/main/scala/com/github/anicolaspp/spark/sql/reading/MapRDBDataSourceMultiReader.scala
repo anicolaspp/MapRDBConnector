@@ -6,6 +6,7 @@ import com.github.anicolaspp.ojai.QueryConditionExtensions._
 import com.github.anicolaspp.spark.sql.MapRDBTabletInfo
 import com.mapr.db.TabletInfo
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.sources.v2.reader.DataReaderFactory
 import org.apache.spark.sql.types.StructType
 import org.ojai.Document
 import org.ojai.store.{Connection, DocumentStore, DriverManager}

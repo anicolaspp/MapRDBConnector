@@ -11,7 +11,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
 object MapRDB {
-  
+
   implicit class SessionOps(sparkSession: SparkSession) {
 
     def loadFromMapRDB(path: String, schema: StructType, many: Int = 1): DataFrame = {
@@ -26,7 +26,6 @@ object MapRDB {
 
   implicit class DataFrameOps(dataFrame: DataFrame) {
 
-    @Experimental
     def writeToMapRDB(path: String, withTransaction: Boolean = false): Unit =
       if (withTransaction) {
         dataFrame
@@ -38,8 +37,6 @@ object MapRDB {
         MapRSpark.save(dataFrame, path, "_id", createTable = false, bulkInsert = false)
       }
 
-
-    @Experimental
     def joinWithMapRDBTable(table: String,
                             schema: StructType,
                             left: String,
@@ -72,7 +69,6 @@ object MapRDB {
       dataFrame.join(rightDF, col(left) === col(right), joinType.toString)
     }
 
-    @Experimental
     def joinWithMapRDBTable(maprdbTable: String,
                             schema: StructType,
                             left: String,

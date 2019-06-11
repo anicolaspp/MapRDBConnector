@@ -2,7 +2,7 @@ import ReleaseTransformations._
 
 name := "MapRDBConnector-spark-2.4"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.11.8"
 
 organization in ThisBuild := "com.github.anicolaspp"
 
@@ -65,15 +65,15 @@ lazy val maprdbconnector = project.in(file("."))
     resolvers += "MapR Releases" at "http://repository.mapr.com/maven/",
 
     resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-    
+
     libraryDependencies ++= Seq(
-      "org.apache.spark" % "spark-core_2.11" % "2.4.0" % "provided",
-      "org.apache.spark" % "spark-sql_2.11" % "2.4.0" % "provided",
+      "org.apache.spark" % "spark-core_2.11" % "2.4.0.0-mapr-620" % "provided",
+      "org.apache.spark" % "spark-sql_2.11" % "2.4.0.0-mapr-620" % "provided",
 
       "org.ojai" % "ojai" % "3.0-mapr-1808",
       "org.ojai" % "ojai-scala" % "3.0-mapr-1808",
 
-      "com.mapr.db" % "maprdb-spark" % "2.3.1-mapr-1808" % "provided",
+      "com.mapr.db" % "maprdb-spark" % "2.4.0.0-mapr-620" % "provided",
       "com.mapr.db" % "maprdb" % "6.1.0-mapr" % "provided",
       "xerces" % "xercesImpl" % "2.11.0" % "provided"
     )

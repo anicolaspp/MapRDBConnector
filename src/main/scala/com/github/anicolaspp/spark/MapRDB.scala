@@ -26,7 +26,6 @@ object MapRDB {
 
   implicit class DataFrameOps(dataFrame: DataFrame) {
 
-    @Experimental
     def writeToMapRDB(path: String, withTransaction: Boolean = false): Unit =
       if (withTransaction) {
         dataFrame.write
@@ -37,8 +36,6 @@ object MapRDB {
         MapRSpark.save(dataFrame, path, "_id", false, false)
       }
 
-
-    @Experimental
     def joinWithMapRDBTable(table: String,
                             schema: StructType,
                             left: String,
@@ -71,7 +68,6 @@ object MapRDB {
       dataFrame.join(rightDF, col(left) === col(right), joinType.toString)
     }
 
-    @Experimental
     def joinWithMapRDBTable(maprdbTable: String,
                             schema: StructType,
                             left: String,

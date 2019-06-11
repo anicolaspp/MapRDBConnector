@@ -18,3 +18,4 @@ src_managed/
 ./idea
 *.xml
 *.iml
+.idea/.name

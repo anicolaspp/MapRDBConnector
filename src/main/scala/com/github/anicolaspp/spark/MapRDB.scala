@@ -11,7 +11,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
 object MapRDB {
-
+  
   implicit class SessionOps(sparkSession: SparkSession) {
 
     def loadFromMapRDB(path: String, schema: StructType, many: Int = 1): DataFrame = {
@@ -29,12 +29,13 @@ object MapRDB {
     @Experimental
     def writeToMapRDB(path: String, withTransaction: Boolean = false): Unit =
       if (withTransaction) {
-        dataFrame.write
+        dataFrame
+          .write
           .format("com.github.anicolaspp.spark.sql.writing.Writer")
           .save(path)
 
       } else {
-        MapRSpark.save(dataFrame, path, "_id", false, false)
+        MapRSpark.save(dataFrame, path, "_id", createTable = false, bulkInsert = false)
       }
 
 

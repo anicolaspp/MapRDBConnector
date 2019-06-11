@@ -1,6 +1,6 @@
 import ReleaseTransformations._
 
-name := "MapRDBConnector-spark-2.4"
+name := "MapRDBConnector"
 
 scalaVersion := "2.11.8"
 

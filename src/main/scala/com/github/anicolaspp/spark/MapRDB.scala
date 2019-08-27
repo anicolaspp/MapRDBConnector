@@ -1,40 +1,67 @@
 package com.github.anicolaspp.spark
 
-
 import com.github.anicolaspp.ojai.OJAISparkPartitionReader
 import com.github.anicolaspp.ojai.OJAISparkPartitionReader.Cell
 import com.github.anicolaspp.spark.sql.reading.JoinType
 import com.mapr.db.spark.utils.MapRSpark
+import org.apache.hadoop.fs.{FileStatus, Path, PathFilter}
 import org.apache.spark.annotation.Experimental
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
+import org.ojai.store.DriverManager
 
 object MapRDB {
 
   implicit class SessionOps(sparkSession: SparkSession) {
 
     def loadFromMapRDB(path: String, schema: StructType, many: Int = 1): DataFrame = {
-      sparkSession
-        .read
-        .format("com.github.anicolaspp.spark.sql.reading.Reader")
-        .schema(schema)
-        .option("readers", many)
-        .load(path)
+
+      if (path.contains("*")) {
+        val paths = expand(path)
+
+        if (paths.nonEmpty) {
+          loadUnionFromMapRDB(paths: _*)(schema, many)
+        } else {
+          sparkSession.emptyDataFrame
+        }
+      } else {
+        sparkSession
+          .read
+          .format("com.github.anicolaspp.spark.sql.reading.Reader")
+          .schema(schema)
+          .option("readers", many)
+          .load(path)
+      }
     }
+
+    private def loadUnionFromMapRDB(paths: String*)(schema: StructType, many: Int = 1): DataFrame =
+      paths
+        .map(path => loadFromMapRDB(path, schema, many))
+        .reduce { (a, b) =>
+          if (a.schema != b.schema) {
+            throw new Exception(s"Table Schema does not match. ${a.schema} != ${b.schema}")
+          } else {
+            a.union(b)
+          }
+        }
+
+    private def expand(path: String): Seq[String] =
+      FileOps.fs
+        .globStatus(new Path(path), FileOps.dbPathFilter)
+        .map(_.getPath.toString)
   }
 
   implicit class DataFrameOps(dataFrame: DataFrame) {
 
     def writeToMapRDB(path: String, withTransaction: Boolean = false): Unit =
       if (withTransaction) {
-        dataFrame
-          .write
+        dataFrame.write
           .format("com.github.anicolaspp.spark.sql.writing.Writer")
           .save(path)
 
       } else {
-        MapRSpark.save(dataFrame, path, "_id", createTable = false, bulkInsert = false)
+        MapRSpark.save(dataFrame, path, "_id", false, false)
       }
 
     def joinWithMapRDBTable(table: String,
@@ -76,5 +103,25 @@ object MapRDB {
       joinWithMapRDBTable(maprdbTable, schema, left, right, JoinType.inner)
   }
 
+}
+
+object FileOps {
+
+  import org.apache.hadoop.conf.Configuration
+  import org.apache.hadoop.fs.{FileSystem, Path}
+
+  lazy val fs: FileSystem = {
+    val conf = new Configuration()
+
+    println(s"File System Configuration: $conf")
+
+    FileSystem.get(conf)
+  }
+
+  lazy val dbPathFilter: PathFilter = new PathFilter {
+    private lazy val connection = DriverManager.getConnection("ojai:mapr:")
+
+    override def accept(path: Path): Boolean = connection.storeExists(path.toString)
+  }
 }
 

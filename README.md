@@ -133,6 +133,30 @@ root
  |-- payload: string (nullable = true)
 ```
 
+## Hadoop FS Patterns Support
+
+When loading tables, we can define patterns and load multiple tables into a single union table. For example, if we have the following MFS structure.
+
+```
+/clients/client_1/data.table
+/clients/client_2/data.table
+....
+```
+
+If we want to query or process the data across multiple clients, we can use `loadFromMapRDB` to read all client's tables into a single union table. 
+
+```scala
+val clientsData = spark.loadFromMapRDB("/clients/*/*")
+```
+
+Or we can load only certain clients.
+
+```scala
+val someClientsData = spark.loadFromMapRDB("/clients/client[1-10]/*")
+```
+
+If we have additional files place in these folder within MFS, the library will ignore them and only use those that reference MapR-DB tables. 
+
 ## Related Blog Posts
 
 - [MapR-DB Spark Connector with Secondary Indexes](https://hackernoon.com/mapr-db-spark-connector-with-secondary-indexes-df41909f28ea)

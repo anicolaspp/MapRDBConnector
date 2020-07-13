@@ -1,9 +1,11 @@
 package com.github.anicolaspp.spark
 
 
+import com.github.anicolaspp.concurrent.ConcurrentContext
 import com.github.anicolaspp.ojai.OJAISparkPartitionReader
 import com.github.anicolaspp.ojai.OJAISparkPartitionReader.Cell
 import com.github.anicolaspp.spark.sql.reading.JoinType
+import com.mapr.db.spark.MapRDBSpark
 import com.mapr.db.spark.utils.MapRSpark
 import org.apache.hadoop.fs.{FileStatus, Path, PathFilter}
 import org.apache.spark.annotation.Experimental
@@ -11,6 +13,9 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.ojai.store.DriverManager
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 object MapRDB {
 
@@ -65,6 +70,9 @@ object MapRDB {
         MapRSpark.save(dataFrame, path, "_id", false, false)
       }
 
+    def writeToMapRDB(path: String, threadsPerPartition: Int): Unit =
+      ConcurrentWriter.MultiThreadDFWriter(dataFrame).writeToMapRDB(path, threadsPerPartition)
+
     def joinWithMapRDBTable(table: String,
                             schema: StructType,
                             left: String,
@@ -106,23 +114,6 @@ object MapRDB {
 
 }
 
-object FileOps {
 
-  import org.apache.hadoop.conf.Configuration
-  import org.apache.hadoop.fs.{FileSystem, Path}
 
-  lazy val fs: FileSystem = {
-    val conf = new Configuration()
-
-    println(s"File System Configuration: $conf")
-
-    FileSystem.get(conf)
-  }
-
-  lazy val dbPathFilter: PathFilter = new PathFilter {
-    private lazy val connection = DriverManager.getConnection("ojai:mapr:")
-
-    override def accept(path: Path): Boolean = connection.storeExists(path.toString)
-  }
-}
 

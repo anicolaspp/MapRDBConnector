@@ -1,5 +1,7 @@
 package com.github.anicolaspp.concurrent
 
+import java.util.concurrent.Executors
+
 import scala.concurrent.duration.Duration.Inf
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -50,9 +52,17 @@ object ConcurrentContext {
   /**
     * Implicit instance to our TaskLevelConcurrentContext since it is our default one.
     */
-  implicit val defaultConcurrentContext: ConcurrentContext = BoundedConcurrentContext
+  implicit val defaultConcurrentContext: ConcurrentContext = BoundedConcurrentContext()
 
   def unboundedConcurrentContext: ConcurrentContext = UnboundedConcurrentContext
+
+  /**
+    * Creates a [[BoundedConcurrentContext]] with a non-default number of threads.
+    *
+    * @param threads Number of threads to be used.
+    * @return A new [[ConcurrentContext]] to be used in concurrent code.
+    */
+  def apply(threads: Int): ConcurrentContext = BoundedConcurrentContext(threads)
 
   /**
     * Implicit syntax

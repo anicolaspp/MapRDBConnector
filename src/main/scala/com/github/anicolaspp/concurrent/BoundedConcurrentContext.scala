@@ -9,12 +9,16 @@ import scala.concurrent.ExecutionContext
   *
   * We use a CachedThreadPool so we can spawn new threads if needed, but reused them as they become available.
   */
-private[concurrent] object BoundedConcurrentContext extends ConcurrentContext {
+private[concurrent] class BoundedConcurrentContext(size: Int = 24) extends ConcurrentContext {
 
   /**
     * We are using CachedThreadPool which is the same as the default used by Spark to run multiple tasks within an Executor.
     */
-  override def ec: ExecutionContext = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(24))
+  override def ec: ExecutionContext = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(size))
+}
+
+object BoundedConcurrentContext {
+  def apply(size: Int = 24): BoundedConcurrentContext = new BoundedConcurrentContext(size)
 }
 
 
